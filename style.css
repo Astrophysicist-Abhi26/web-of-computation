@@ -260,6 +260,7 @@ body.people .pioneer { opacity: 1; pointer-events: auto; }
   -webkit-backdrop-filter: blur(6px);
   display: flex; align-items: center; justify-content: center;
 }
+#atoms[hidden] { display: none; }
 #atoms-box {
   position: relative; width: min(680px, 94vw); max-height: 90vh; overflow-y: auto;
   background: var(--glass); border: 1px solid rgba(255,255,255,0.15);
