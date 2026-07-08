@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
@@ -110,6 +110,10 @@
         <label class="achk">τ <input type="range" id="at-temp" min="0.2" max="4" step="0.1" value="1"> <span id="at-tempv" class="mono"></span></label>
       </div>
     </section>
+
+    <div id="atoms-box-footer">
+      <button id="atoms-close-text">✕ Close</button>
+    </div>
   </div>
 </div>
 
@@ -123,8 +127,8 @@
   <div id="year-readout">2026</div>
 </div>
 
-<script src="data.js"></script>
-<script src="app.js"></script>
-<script src="atoms.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/atoms.js"></script>
 </body>
 </html>

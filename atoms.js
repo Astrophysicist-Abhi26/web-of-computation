@@ -9,6 +9,7 @@ const ATOM_NAMES = { turing:"Turing machine", enigma:"Enigma", perceptron:"Perce
 const atomsEl = document.getElementById("atoms");
 document.getElementById("toggle-atoms").addEventListener("click", () => openAtom("turing"));
 document.getElementById("atoms-close").addEventListener("click", closeAtoms);
+document.getElementById("atoms-close-text").addEventListener("click", closeAtoms);
 atomsEl.addEventListener("click", e => { if (e.target === atomsEl) closeAtoms(); });
 document.querySelectorAll(".atom-tab").forEach(b =>
   b.addEventListener("click", () => showAtom(b.dataset.atom)));
