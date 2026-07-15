@@ -198,6 +198,9 @@ function openField(f, d) {
     const body = $("panel-body");
     body.insertBefore(btn, body.children[2] || null);
   }
+  if (f.id === "infotheory" && window.openInformationTheoryExperience) {
+    window.openInformationTheoryExperience();
+  }
 }
 $("panel-close").addEventListener("click", () => {
   panel.classList.remove("open");
