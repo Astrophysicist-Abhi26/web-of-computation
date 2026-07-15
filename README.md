@@ -15,6 +15,14 @@ git push -u origin main
 
 Or preview locally: `python3 -m http.server` then open http://localhost:8000
 
+For an existing clone of this repository, deploy an update with:
+
+```bash
+git add app.js index.html information-theory.js classical-cryptography.js modern-cryptography.js README.md
+git commit -m "Add interactive cryptography field guides"
+git push origin main
+```
+
 ## What's on the map
 
 - **8 domain nebulae** (Foundations, Hardware, Algorithms, Languages, Information,
@@ -32,7 +40,22 @@ Or preview locally: `python3 -m http.server` then open http://localhost:8000
   ⚙️ steady teal · 🪦 dim gravestone · 🧟 pulsing back to life.
 - **Gold bridges** with mediating concepts (Shannon 1937, entropy → cross-entropy,
   Bellman → RL, CUDA → AlexNet…) and **red lightning controversy edges**
-  (Minsky vs Rosenblatt, Chomsky vs LLMs).
+(Minsky vs Rosenblatt, Chomsky vs LLMs).
+
+## Information & Cryptography field guides
+
+The three fields in this domain now open long-form, playable learning experiences
+without changing the main map:
+
+- **Information Theory** — entropy/capacity controls, noisy-channel transmission,
+  expandable WHAT · HOW · STORY · TODAY chapters, and foundational sources.
+- **Classical Cryptography** — Caesar, Vigenère and one-time-pad experiments,
+  animated frequency analysis, guided cracking, an Enigma companion launch, five
+  historical chapters, and primary/foundational sources.
+- **Modern Cryptography** — animated Diffie–Hellman exchange and attack, a working
+  toy RSA locksmith and factoring attack, a zero-knowledge cave challenge, five
+  conceptual chapters, and links from the 1976 public-key paper through NIST's
+  current post-quantum standards work.
 
 ## Editing (the whole point)
 
@@ -58,4 +81,3 @@ LLM Era field panels:
 4. **Gradient descent marble** — one η slider: too hot diverges, too cold crawls.
 5. **Attention head** — live softmax(Q·Kᵀ/τ) heatmap over four tokens with a
    temperature slider.
-

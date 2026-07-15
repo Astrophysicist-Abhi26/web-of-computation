@@ -201,6 +201,12 @@ function openField(f, d) {
   if (f.id === "infotheory" && window.openInformationTheoryExperience) {
     window.openInformationTheoryExperience();
   }
+  if (f.id === "classic-crypto" && window.openClassicalCryptoExperience) {
+    window.openClassicalCryptoExperience();
+  }
+  if (f.id === "modern-crypto" && window.openModernCryptoExperience) {
+    window.openModernCryptoExperience();
+  }
 }
 $("panel-close").addEventListener("click", () => {
   panel.classList.remove("open");
