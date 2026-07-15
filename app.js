@@ -207,6 +207,9 @@ function openField(f, d) {
   if (f.id === "modern-crypto" && window.openModernCryptoExperience) {
     window.openModernCryptoExperience();
   }
+  if (f.id === "logic" && window.openMathLogicExperience) {
+    window.openMathLogicExperience();
+  }
 }
 $("panel-close").addEventListener("click", () => {
   panel.classList.remove("open");
