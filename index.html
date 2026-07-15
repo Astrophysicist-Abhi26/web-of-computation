@@ -68,14 +68,9 @@
     </section>
 
     <section class="atom-pane" id="atom-enigma" hidden>
-      <h3>Enigma · rotors I·II·III + reflector B — press a key</h3>
-      <p class="ahint">Historical wirings; the right rotor steps every keypress (double-stepping omitted for clarity). The Bombe searched these settings by wired deduction.</p>
-      <div id="en-keys" class="keys"></div>
-      <p class="astatus">lamp: <b id="en-lamp">·</b></p>
-      <p id="en-path" class="astatus mono"></p>
-      <p id="en-rotors" class="astatus mono"></p>
-      <p id="en-out" class="astatus mono"></p>
-      <div class="abar"><button class="abtn" id="en-reset">reset rotors</button></div>
+      <h3>Enigma · full machine — rotors, reflector, plugboard</h3>
+      <p class="ahint">Historical Wehrmacht wirings (rotors I–V, reflectors B/C), correct double-stepping, and a working plugboard. Press a key or type: the matching lamp lights, and no letter ever encodes to itself — the flaw the Bombe exploited.</p>
+      <div id="en-stage"></div>
     </section>
 
     <section class="atom-pane" id="atom-perceptron" hidden>
@@ -130,6 +125,5 @@
 <script src="data.js"></script>
 <script src="app.js"></script>
 <script src="atoms.js"></script>
-<script src="phase-d.js"></script>
 </body>
 </html>

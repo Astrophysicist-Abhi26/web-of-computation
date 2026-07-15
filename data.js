@@ -38,7 +38,7 @@ const DOMAINS = [
 
 // -------- CONTAINMENT SHELLS (the §0 answer, rendered) --------
 const SHELLS = {
-  cx: 940, cy: 830,
+  cx: 820, cy: 560,
   rings: [
     { label: "ARTIFICIAL INTELLIGENCE", rx: 460, ry: 210, o: 0.10 },
     { label: "MACHINE LEARNING",        rx: 340, ry: 150, o: 0.14 },
