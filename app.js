@@ -210,6 +210,15 @@ function openField(f, d) {
   if (f.id === "logic" && window.openMathLogicExperience) {
     window.openMathLogicExperience();
   }
+  if (f.id === "quantum" && window.openQuantumExperience) {
+    window.openQuantumExperience();
+  }
+  if (f.id === "complexity" && window.openComplexityExperience) {
+    window.openComplexityExperience();
+  }
+  if (f.id === "computability" && window.openComputabilityExperience) {
+    window.openComputabilityExperience();
+  }
 }
 $("panel-close").addEventListener("click", () => {
   panel.classList.remove("open");
