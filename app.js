@@ -223,6 +223,10 @@ function openField(f, d) {
     window.openAutomataExperience();
     return;
   }
+  if (f.id === "mech" && window.openMechanicalExperience) {
+    window.openMechanicalExperience();
+    return;
+  }
 }
 $("panel-close").addEventListener("click", () => {
   panel.classList.remove("open");
