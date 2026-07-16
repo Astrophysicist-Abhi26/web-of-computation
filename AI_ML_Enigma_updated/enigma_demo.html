@@ -1,0 +1,357 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Enigma — local test</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:radial-gradient(circle at 50% 0%,#141019,#080610 70%);
+    min-height:100vh;padding:24px 12px;font-family:'IBM Plex Mono',monospace;color:#e8e2d0}
+  h1{text-align:center;font-weight:700;letter-spacing:1px;color:#f5c451;margin:0 0 4px}
+  .sub{text-align:center;color:#8a7f62;font-size:13px;margin-bottom:20px}
+  #atom-enigma{max-width:760px;margin:0 auto}
+</style></head>
+<body>
+  <h1>ENIGMA · full machine</h1>
+  <div class="sub">local test build — rotors I–V · reflectors B/C · plugboard · double-stepping · no letter encodes itself</div>
+  <section class="atom-pane" id="atom-enigma"><div id="en-stage"></div></section>
+  <script>
+// ============================================================
+// 2) ENIGMA — full machine: 5 rotors, reflectors B/C, plugboard,
+//    double-stepping, live lampboard + keyboard + rotor discs.
+//    Cipher core verified: AAAAA->BDZGO, reciprocal, zero self-maps.
+// ============================================================
+let initEnigma; // entry point, assigned by the IIFE below
+(function () {
+"use strict";
+
+const CI = c => c.charCodeAt(0) - 65;
+const CH = i => String.fromCharCode(65 + ((i % 26) + 26) % 26);
+
+const WIRING = {
+  I:"EKMFLGDQVZNTOWYHXUSPAIBRCJ", II:"AJDKSIRUXBLHWTMCQGZNPYFVOE",
+  III:"BDFHJLCPRTXVZNYEIWGAKMUSQO", IV:"ESOVPZJAYQUIRHXLNFTGKDCMWB",
+  V:"VZBRGITYUPSDNHLXAWMJQOFECK"
+};
+const NOTCH = { I:"Q", II:"E", III:"V", IV:"J", V:"Z" };
+const REFLECTOR = { B:"YRUHQSLDPXNGOKMIEBFZCWVJAT", C:"FVPJIAOYEDRZXWGCTKUQSBNMHL" };
+const inverse = w => { const inv = Array(26); for (let i=0;i<26;i++) inv[CI(w[i])]=i; return inv; };
+
+// German QWERTZ physical layout (keys, lamps, plugboard sockets)
+const ROWS = ["QWERTZUIO", "ASDFGHJK", "PYXCVBNML"];
+const PLUG_PALETTE = ["#ef4444","#f59e0b","#22c55e","#3b82f6","#a855f7",
+  "#ec4899","#14b8a6","#eab308","#f97316","#06b6d4","#8b5cf6","#84cc16","#f43f5e"];
+
+const EG = {
+  order:["I","II","III"], refl:"B",
+  pos:[0,0,0], ring:[0,0,0],     // [left, middle, right]
+  plug:{}, pending:null,
+  msg:"", cipher:"", selfMaps:0, lastPath:null
+};
+
+function fwdRotor(w, pos, ring, c){
+  const s = (((pos-ring)%26)+26)%26; return (((CI(w[(c+s)%26])-s)%26)+26)%26;
+}
+function bwdRotor(inv, pos, ring, c){
+  const s = (((pos-ring)%26)+26)%26; return (((inv[(c+s)%26]-s)%26)+26)%26;
+}
+function plugOf(c){ const s=CH(c); return EG.plug[s]!==undefined ? CI(EG.plug[s]) : c; }
+
+function stepRotors(){
+  const R = EG.order.map(n => CI(NOTCH[n]));
+  const rightNotch = EG.pos[2] === R[2];
+  const midNotch   = EG.pos[1] === R[1];
+  if (midNotch){ EG.pos[0]=(EG.pos[0]+1)%26; EG.pos[1]=(EG.pos[1]+1)%26; }
+  else if (rightNotch){ EG.pos[1]=(EG.pos[1]+1)%26; }
+  EG.pos[2]=(EG.pos[2]+1)%26;
+}
+
+function encipher(c){
+  stepRotors();
+  const W = EG.order.map(n => WIRING[n]);
+  const IV = W.map(inverse);
+  const R = REFLECTOR[EG.refl];
+  const path = [];
+  let x = c;                            path.push(["key", CH(c)]);
+  x = plugOf(x);                        path.push(["plug", CH(x)]);
+  x = fwdRotor(W[2],EG.pos[2],EG.ring[2],x); path.push([EG.order[2], CH(x)]);
+  x = fwdRotor(W[1],EG.pos[1],EG.ring[1],x); path.push([EG.order[1], CH(x)]);
+  x = fwdRotor(W[0],EG.pos[0],EG.ring[0],x); path.push([EG.order[0], CH(x)]);
+  x = CI(R[x]);                         path.push(["UKW-"+EG.refl, CH(x)]);
+  x = bwdRotor(IV[0],EG.pos[0],EG.ring[0],x); path.push([EG.order[0]+"'", CH(x)]);
+  x = bwdRotor(IV[1],EG.pos[1],EG.ring[1],x); path.push([EG.order[1]+"'", CH(x)]);
+  x = bwdRotor(IV[2],EG.pos[2],EG.ring[2],x); path.push([EG.order[2]+"'", CH(x)]);
+  x = plugOf(x);                        path.push(["plug", CH(x)]);
+  path.push(["lamp", CH(x)]);
+  EG.lastPath = path;
+  return x;
+}
+
+// ---------- CSS (self-injected once) ----------
+function injectCSS(){
+  if (document.getElementById("enigma-css")) return;
+  const s = document.createElement("style"); s.id = "enigma-css";
+  s.textContent = `
+  #en-stage{--amber:#f5c451;--amber-dim:#7a642b;--panel:#15130e;--metal:#26221a;
+    color:#e8e2d0;font-family:'IBM Plex Mono',ui-monospace,monospace}
+  #en-stage .en-wrap{background:linear-gradient(#1a1712,#100e0a);
+    border:3px solid #4a3a24;border-radius:14px;padding:14px 16px;
+    box-shadow:inset 0 0 40px rgba(0,0,0,.6),0 8px 30px rgba(0,0,0,.5)}
+  #en-stage .en-controls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;
+    margin-bottom:12px;font-size:12px}
+  #en-stage .en-controls label{display:flex;align-items:center;gap:5px;color:#b8ad90}
+  #en-stage select{background:#0c0a07;color:var(--amber);border:1px solid #4a3a24;
+    border-radius:6px;padding:3px 6px;font-family:inherit;font-size:12px}
+  #en-stage .en-rotors{display:flex;gap:14px;justify-content:center;align-items:center;
+    flex-wrap:wrap;margin:6px 0 14px}
+  #en-stage .en-rotor{text-align:center}
+  #en-stage .en-rotor svg{display:block}
+  #en-stage .en-rotor .rname{font-size:11px;color:var(--amber);margin-top:2px;letter-spacing:1px}
+  #en-stage .en-rotor .rstep{font-size:10px;color:#8a7f62}
+  #en-stage .en-stepbtn{cursor:pointer;user-select:none;color:#9a8f70;font-size:14px;
+    padding:0 4px}
+  #en-stage .en-stepbtn:hover{color:var(--amber)}
+  #en-stage .en-ukw{width:64px;height:64px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#3a2f1c,#0e0b07);
+    border:2px solid #5a4526;display:flex;align-items:center;justify-content:center;
+    flex-direction:column;color:var(--amber);font-size:11px;box-shadow:inset 0 0 12px #000}
+  #en-stage .en-board-label{font-size:10px;letter-spacing:2px;color:#7a6f52;
+    text-align:center;margin:8px 0 4px}
+  #en-stage .en-row{display:flex;justify-content:center;gap:6px;margin:5px 0}
+  #en-stage .lamp{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;
+    justify-content:center;font-size:15px;font-weight:600;
+    background:radial-gradient(circle at 40% 35%,#2a2620,#141210);
+    border:1px solid #332d22;color:#5a5347;transition:all .12s}
+  #en-stage .lamp.lit{color:#1a1204;
+    background:radial-gradient(circle at 40% 35%,#fff2c0,var(--amber));
+    border-color:var(--amber);box-shadow:0 0 22px 4px rgba(245,196,81,.75),
+    inset 0 0 8px rgba(255,255,255,.6);transform:scale(1.06)}
+  #en-stage .key{width:40px;height:40px;border-radius:50%;font-size:15px;font-weight:600;
+    cursor:pointer;color:#d8cfb4;
+    background:radial-gradient(circle at 40% 30%,#3d3830,#1c1912);
+    border:2px solid #0a0806;box-shadow:0 3px 0 #0a0806,inset 0 1px 2px rgba(255,255,255,.15);
+    transition:transform .05s}
+  #en-stage .key:hover{border-color:var(--amber-dim)}
+  #en-stage .key.down{transform:translateY(3px);box-shadow:0 0 0 #0a0806,
+    inset 0 0 10px rgba(245,196,81,.5);border-color:var(--amber)}
+  #en-stage .en-plug-wrap{position:relative;margin:4px auto 0;width:max-content}
+  #en-stage .en-plug-wrap svg{position:absolute;left:0;top:0;pointer-events:none;z-index:0}
+  #en-stage .socket{position:absolute;width:34px;height:34px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;
+    background:radial-gradient(circle at 40% 35%,#241f18,#0d0b08);
+    border:2px solid #3a3226;color:#b8ad90;z-index:1;transition:all .12s}
+  #en-stage .socket:hover{border-color:var(--amber)}
+  #en-stage .socket.pending{border-color:var(--amber);box-shadow:0 0 12px rgba(245,196,81,.7)}
+  #en-stage .en-io{display:flex;gap:18px;flex-wrap:wrap;margin:12px 0 6px;font-size:12px}
+  #en-stage .en-io .box{flex:1;min-width:160px;background:#0a0806;border:1px solid #33291a;
+    border-radius:6px;padding:6px 9px}
+  #en-stage .en-io .lbl{color:#7a6f52;font-size:10px;letter-spacing:1px}
+  #en-stage .en-io .val{color:var(--amber);word-break:break-all;min-height:16px;letter-spacing:2px}
+  #en-stage .en-path{font-size:11px;color:#a99e80;margin:8px 0;line-height:1.7;text-align:center}
+  #en-stage .en-path b{color:var(--amber)}
+  #en-stage .en-note{font-size:11px;color:#8a7f62;text-align:center;margin-top:8px;
+    border-top:1px solid #2a2318;padding-top:8px}
+  #en-stage .en-note b{color:#e08a5a}
+  #en-stage .en-buttons{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+  #en-stage .en-btn{background:#1c1710;color:var(--amber);border:1px solid #4a3a24;
+    border-radius:6px;padding:5px 12px;font-family:inherit;font-size:12px;cursor:pointer}
+  #en-stage .en-btn:hover{background:#2a2115}`;
+  document.head.appendChild(s);
+}
+
+// ---------- rotor disc SVG ----------
+function rotorDisc(slot){
+  const name = EG.order[slot], pos = EG.pos[slot], notch = CI(NOTCH[name]);
+  const R=30, cx=36, cy=36, rr=22;
+  let ticks="";
+  for (let i=0;i<26;i++){
+    const ang = (i - pos) * (360/26) - 90;   // current pos -> top
+    const a = ang*Math.PI/180;
+    const tx = cx + rr*Math.cos(a), ty = cy + rr*Math.sin(a);
+    const isCur = i===pos, isNotch = i===notch;
+    ticks += `<text x="${tx.toFixed(1)}" y="${(ty+3).toFixed(1)}" text-anchor="middle"
+      font-size="${isCur?9:6}" fill="${isCur?'#f5c451':isNotch?'#ef4444':'#6a6150'}"
+      font-weight="${isCur?'700':'400'}">${CH(i)}</text>`;
+  }
+  return `<svg width="72" height="72" viewBox="0 0 72 72">
+    <circle cx="${cx}" cy="${cy}" r="${R}" fill="url(#rg${slot})" stroke="#5a4526" stroke-width="2"/>
+    <defs><radialGradient id="rg${slot}" cx="38%" cy="32%">
+      <stop offset="0" stop-color="#3a2f1c"/><stop offset="1" stop-color="#0e0b07"/>
+    </radialGradient></defs>
+    ${ticks}
+    <polygon points="36,4 32,12 40,12" fill="#f5c451"/>
+    <circle cx="${cx}" cy="${cy}" r="9" fill="#0a0806" stroke="#5a4526"/>
+    <text x="36" y="40" text-anchor="middle" font-size="12" fill="#f5c451" font-weight="700">${CH(pos)}</text>
+  </svg>`;
+}
+
+// ---------- render ----------
+function render(){
+  const st = document.getElementById("en-stage");
+  const opt = sel => ["I","II","III","IV","V"].map(r =>
+    `<option ${EG.order[sel]===r?"selected":""}>${r}</option>`).join("");
+  const lampRow = (letters,slot) => `<div class="en-row">` +
+    letters.split("").map(l=>`<div class="lamp" data-l="${l}">${l}</div>`).join("") + `</div>`;
+  const keyRow = letters => `<div class="en-row">` +
+    letters.split("").map(l=>`<button class="key" data-k="${l}">${l}</button>`).join("") + `</div>`;
+
+  st.innerHTML = `
+  <div class="en-wrap">
+    <div class="en-controls">
+      <label>left <select data-slot="0">${opt(0)}</select></label>
+      <label>middle <select data-slot="1">${opt(1)}</select></label>
+      <label>right <select data-slot="2">${opt(2)}</select></label>
+      <label>reflector <select id="en-refl">
+        <option ${EG.refl==="B"?"selected":""}>B</option>
+        <option ${EG.refl==="C"?"selected":""}>C</option></select></label>
+      <span style="color:#7a6f52">rings AAA · click ▲▼ to set start position</span>
+    </div>
+
+    <div class="en-rotors" id="en-rotor-bank"></div>
+
+    <div class="en-board-label">◆ LAMPBOARD ◆</div>
+    <div id="en-lamps">${lampRow(ROWS[0])}${lampRow(ROWS[1])}${lampRow(ROWS[2])}</div>
+
+    <div class="en-board-label">◆ KEYBOARD — press a key (or type) ◆</div>
+    <div id="en-keyboard">${keyRow(ROWS[0])}${keyRow(ROWS[1])}${keyRow(ROWS[2])}</div>
+
+    <div class="en-board-label">◆ PLUGBOARD (Steckerbrett) — click two letters to wire a pair ◆</div>
+    <div class="en-plug-wrap" id="en-plug"></div>
+
+    <div class="en-io">
+      <div class="box"><div class="lbl">MESSAGE (plaintext in)</div><div class="val" id="en-msg">—</div></div>
+      <div class="box"><div class="lbl">CIPHER (lamp out)</div><div class="val" id="en-cipher">—</div></div>
+    </div>
+    <div class="en-path" id="en-path">press a key — the current flows plug → right → mid → left → reflector → back → lamp</div>
+    <div class="en-note" id="en-note"><b>The flaw:</b> because of the reflector, no letter ever lights its own lamp.
+      That guarantee is exactly what Turing's Bombe exploited to crack the daily key.</div>
+    <div class="en-buttons">
+      <button class="en-btn" id="en-reset">reset rotors → AAA</button>
+      <button class="en-btn" id="en-clearmsg">clear message</button>
+      <button class="en-btn" id="en-clearplug">clear plugboard</button>
+    </div>
+  </div>`;
+
+  renderRotorBank();
+  renderPlugboard();
+  document.getElementById("en-msg").textContent = EG.msg || "—";
+  document.getElementById("en-cipher").textContent = EG.cipher || "—";
+
+  // wire controls
+  st.querySelectorAll("select[data-slot]").forEach(sel =>
+    sel.addEventListener("change", () => { EG.order[+sel.dataset.slot]=sel.value; render(); }));
+  document.getElementById("en-refl").addEventListener("change", e => { EG.refl=e.target.value; });
+  st.querySelectorAll(".key").forEach(k =>
+    k.addEventListener("click", () => press(k.dataset.k)));
+  document.getElementById("en-reset").addEventListener("click", () => {
+    EG.pos=[0,0,0]; renderRotorBank(); });
+  document.getElementById("en-clearmsg").addEventListener("click", () => {
+    EG.msg=""; EG.cipher=""; EG.selfMaps=0;
+    document.getElementById("en-msg").textContent="—";
+    document.getElementById("en-cipher").textContent="—"; clearLamps(); });
+  document.getElementById("en-clearplug").addEventListener("click", () => {
+    EG.plug={}; EG.pending=null; renderPlugboard(); });
+}
+
+function renderRotorBank(){
+  const bank = document.getElementById("en-rotor-bank");
+  const stepper = slot => `
+    <div class="en-rotor">
+      <div class="en-stepbtn" data-up="${slot}">▲</div>
+      ${rotorDisc(slot)}
+      <div class="en-stepbtn" data-dn="${slot}">▼</div>
+      <div class="rname">rotor ${EG.order[slot]}</div>
+      <div class="rstep">${slot===2?"steps every key":slot===1?"steps on notch":"slowest"}</div>
+    </div>`;
+  bank.innerHTML = stepper(0)+stepper(1)+stepper(2)+
+    `<div style="text-align:center">
+       <div class="en-ukw"><span style="font-size:9px">reflector</span><b>UKW-${EG.refl}</b></div>
+       <div class="rname" style="margin-top:4px">bounces back</div></div>`;
+  bank.querySelectorAll("[data-up]").forEach(b => b.addEventListener("click", ()=>{
+    const s=+b.dataset.up; EG.pos[s]=(EG.pos[s]+1)%26; renderRotorBank(); }));
+  bank.querySelectorAll("[data-dn]").forEach(b => b.addEventListener("click", ()=>{
+    const s=+b.dataset.dn; EG.pos[s]=(EG.pos[s]+25)%26; renderRotorBank(); }));
+}
+
+function renderPlugboard(){
+  const wrap = document.getElementById("en-plug");
+  const cell=44, sr=17, W=9*cell, H=3*cell;
+  const centers = {};
+  let sockets="";
+  ROWS.forEach((row,ri) => {
+    const indent = ri===1 ? cell/2 : 0;
+    row.split("").forEach((l,ci2) => {
+      const x = ci2*cell + indent, y = ri*cell;
+      centers[l] = {x:x+sr, y:y+sr};
+      const partner = EG.plug[l];
+      let ring = "";
+      if (partner){ const idx = pairIndex(l); ring = `border-color:${PLUG_PALETTE[idx%PLUG_PALETTE.length]}`; }
+      const pend = EG.pending===l ? " pending" : "";
+      sockets += `<div class="socket${pend}" data-s="${l}" style="left:${x}px;top:${y}px;${ring}">${l}</div>`;
+    });
+  });
+  // wires
+  let lines=""; const done={};
+  Object.keys(EG.plug).forEach(a => {
+    const b=EG.plug[a]; if(done[a]||done[b])return; done[a]=done[b]=1;
+    const idx=pairIndex(a), col=PLUG_PALETTE[idx%PLUG_PALETTE.length];
+    const p=centers[a], q=centers[b];
+    const mx=(p.x+q.x)/2, my=(p.y+q.y)/2 + 26;
+    lines += `<path d="M${p.x} ${p.y} Q ${mx} ${my} ${q.x} ${q.y}" stroke="${col}"
+      stroke-width="2.5" fill="none" opacity=".85"/>`;
+  });
+  wrap.style.width=W+"px"; wrap.style.height=H+"px";
+  wrap.innerHTML = `<svg width="${W}" height="${H+30}">${lines}</svg>` + sockets;
+  wrap.querySelectorAll(".socket").forEach(s =>
+    s.addEventListener("click", () => plugClick(s.dataset.s)));
+}
+function pairIndex(letter){
+  const keys = Object.keys(EG.plug).filter(k => k < EG.plug[k]).sort();
+  const norm = letter < EG.plug[letter] ? letter : EG.plug[letter];
+  return keys.indexOf(norm);
+}
+function plugClick(l){
+  if (EG.plug[l]){ const p=EG.plug[l]; delete EG.plug[l]; delete EG.plug[p]; EG.pending=null; renderPlugboard(); return; }
+  if (EG.pending===null){ EG.pending=l; renderPlugboard(); return; }
+  if (EG.pending===l){ EG.pending=null; renderPlugboard(); return; }
+  if (Object.keys(EG.plug).length>=26){ EG.pending=null; renderPlugboard(); return; }
+  EG.plug[EG.pending]=l; EG.plug[l]=EG.pending; EG.pending=null; renderPlugboard();
+}
+
+function clearLamps(){ document.querySelectorAll("#en-lamps .lamp").forEach(x=>x.classList.remove("lit")); }
+let lampTimer=null;
+function press(letter){
+  const c = CI(letter), out = encipher(c), outL = CH(out);
+  EG.msg += letter; EG.cipher += outL;
+  if (letter===outL) EG.selfMaps++;   // will always stay 0
+  // key press animation
+  const kbtn = document.querySelector(`#en-keyboard .key[data-k="${letter}"]`);
+  if (kbtn){ kbtn.classList.add("down"); setTimeout(()=>kbtn.classList.remove("down"),120); }
+  // lamp
+  clearLamps();
+  const lamp = document.querySelector(`#en-lamps .lamp[data-l="${outL}"]`);
+  if (lamp) lamp.classList.add("lit");
+  clearTimeout(lampTimer); lampTimer = setTimeout(clearLamps, 650);
+  // readouts
+  renderRotorBank();
+  document.getElementById("en-msg").textContent = EG.msg;
+  document.getElementById("en-cipher").textContent = EG.cipher;
+  const p = EG.lastPath;
+  document.getElementById("en-path").innerHTML =
+    p.map(([stage,ltr],i)=> (i===0?"":"→ ") +
+      `<span title="${stage}"><b>${ltr}</b><sub style="color:#6a6150;font-size:9px">${stage}</sub></span>`
+    ).join(" ");
+}
+
+// physical keyboard (attached once, guarded by pane visibility)
+document.addEventListener("keydown", e => {
+  const pane = document.getElementById("atom-enigma");
+  if (!pane || pane.hidden) return;
+  const k = e.key.toUpperCase();
+  if (/^[A-Z]$/.test(k)){ e.preventDefault(); press(k); }
+});
+
+initEnigma = function(){ injectCSS(); render(); };
+window.__enigmaInit = initEnigma;
+})();
+  window.__enigmaInit ? window.__enigmaInit() : initEnigma();
+  </script>
+</body></html>

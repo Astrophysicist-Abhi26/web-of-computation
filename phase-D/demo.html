@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase C + D preview — playable atoms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 30% 20%,#101a38 0%,#060a18 60%,#03050d 100%);
+       color:#dfe6f5;font-family:Spectral,Georgia,serif;display:flex;align-items:center;justify-content:center}
+  .card{text-align:center;max-width:520px;padding:0 24px}
+  h1{font-family:Fraunces,Georgia,serif;font-weight:600;color:#f3ecdc}
+  h1 em{color:#f5c86b;font-style:italic}
+  p{color:#9aa8cc;line-height:1.6}
+  code{font-family:"IBM Plex Mono",monospace;color:#f5c86b;font-size:.9em}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>The Web of <em>Computation</em> — Phase C + D preview</h1>
+  <p>This page loads <code>js/atoms.js</code> and <code>js/phase-d.js</code> over a stand-in sky. Click the
+     <b style="color:#f5c86b">⚛ playable atoms</b> button (bottom-right) and test the five atoms, then the <b style="color:#ff8f9c">☄ contested sky</b> button for comets, disputes, and fog — the four gold comets should be drifting behind this card. When you're happy, drop the same file into
+     the real repo — one script tag, nothing else.</p>
+</div>
+<!-- a stand-in 1600x1000 sky so the comets have somewhere to fly -->
+<svg id="map" viewBox="0 0 1600 1000" style="position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none"></svg>
+<script>document.getElementById('map').style.pointerEvents='none';
+/* re-enable clicks just on comet elements */
+</script>
+<style>#map .comet *{pointer-events:auto}</style>
+<script src="js/atoms.js"></script>
+<script src="js/phase-d.js"></script>
+</body>
+</html>
