@@ -219,6 +219,10 @@ function openField(f, d) {
   if (f.id === "computability" && window.openComputabilityExperience) {
     window.openComputabilityExperience();
   }
+  if (f.id === "automata" && window.openAutomataExperience) {
+    window.openAutomataExperience();
+    return;
+  }
 }
 $("panel-close").addEventListener("click", () => {
   panel.classList.remove("open");
