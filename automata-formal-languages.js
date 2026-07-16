@@ -122,7 +122,21 @@
       + ".afl-srcbody p{margin:3px 0 0;color:#9fb0bf;font-size:13.5px;line-height:1.5}"
       + ".afl-note{color:#8aa;font-size:13px;font-style:italic;margin-top:8px}"
       + ".afl-flag{color:" + GOLD + "}"
-      + "@media(max-width:640px){.afl-chnum{font-size:34px}.afl-rings{height:280px}}";
+      + "@media(max-width:640px){.afl-chnum{font-size:34px}.afl-rings{height:280px}}"
+      // ---- panel teaser (rendered INSIDE the site side panel, so NOT scoped to #aflOverlay) ----
+      + ".afl-teaser{margin:14px 0 4px}"
+      + ".afl-kick{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.18em;"
+      + "text-transform:uppercase;font-size:11px;line-height:1.5;color:" + GOLD + ";margin:2px 0 10px}"
+      + ".afl-teaser-blurb{font-size:14.5px;line-height:1.62;color:#d6dee6;margin:10px 0}"
+      + ".afl-teaser-blurb b{color:#fff}.afl-teaser-blurb em{color:" + ACCENT2 + ";font-style:italic}"
+      + ".afl-tl{display:flex;flex-wrap:wrap;gap:14px 18px;margin:16px 0 6px;padding-top:12px;"
+      + "border-top:1px solid rgba(255,255,255,.10)}"
+      + ".afl-tl-item{font-size:11.5px;line-height:1.35;color:#9fb0bf;max-width:92px}"
+      + ".afl-tl-y{display:block;font-family:ui-monospace,monospace;font-weight:600;color:" + GOLD + ";font-size:12.5px}"
+      + ".afl-launch{display:inline-flex;align-items:center;margin:16px 0 6px;cursor:pointer;"
+      + "font-family:ui-monospace,monospace;font-size:13.5px;letter-spacing:.04em;font-weight:700;"
+      + "color:#04201c;background:" + ACCENT + ";border:none;border-radius:10px;padding:11px 18px;transition:.16s}"
+      + ".afl-launch:hover{filter:brightness(1.12);transform:translateY(-1px)}";
     var s = document.createElement("style");
     s.id = "afl-styles";
     s.textContent = css;
@@ -351,7 +365,7 @@
     return e;
   }
 
-  window.openAutomataExperience = function () {
+  function launchGuide() {
     ensureStyles();
     var old = document.getElementById("aflOverlay");
     if (old) old.remove();
@@ -427,6 +441,57 @@
       btns.forEach(function (b, k) { b.classList.toggle("on", k === n); });
       ov.scrollTo({ top: 0, behavior: "smooth" });
     }
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 3b. PANEL TEASER  — what the OTHER guides do: enrich the side       *
+   *     panel, put the immersive guide behind a launch button.         *
+   *     (This is what app.js calls when the Automata node is clicked.)  *
+   * ------------------------------------------------------------------ */
+  var TIMELINE = [
+    { y: "1943", n: "McCulloch\u2013Pitts" },
+    { y: "1951", n: "Kleene / regex" },
+    { y: "1956", n: "Chomsky hierarchy" },
+    { y: "1959", n: "Rabin\u2013Scott NFA" },
+    { y: "1968", n: "Thompson / grep" }
+  ];
+
+  window.openAutomataExperience = function () {
+    ensureStyles();
+    var body = document.getElementById("panel-body");
+    if (!body) { launchGuide(); return; }              // fallback: no panel found
+    if (body.querySelector(".afl-teaser")) return;      // idempotent
+
+    var teaser = el("div", "afl-teaser");
+
+    teaser.appendChild(el("div", "afl-kick",
+      "Interactive Field Guide \u00B7 Machines, Grammars &amp; the Hierarchy \u00B7 about 45 min"));
+
+    teaser.appendChild(el("p", "afl-teaser-blurb",
+      "In 1943 two scientists modeled the brain as logic gates and, without meaning to, built the first machine "
+      + "with a <b>finite memory</b>. This is the field that drew computer science's first precise line between "
+      + "what a machine <em>can</em> and <em>cannot</em> recognize \u2014 and then unified two ways of describing "
+      + "infinite sets of strings: <b>grammars</b> that generate them and <b>automata</b> that accept them."));
+
+    teaser.appendChild(el("p", "afl-teaser-blurb",
+      "Five hands-on labs: run a real DFA, watch an NFA collapse into a DFA by the subset construction, push a "
+      + "stack machine past the ceiling of regular languages, <em>break</em> a language with the pumping lemma, "
+      + "and climb the four rings of the Chomsky hierarchy by hand."));
+
+    var tl = el("div", "afl-tl");
+    TIMELINE.forEach(function (m) {
+      tl.appendChild(el("div", "afl-tl-item", "<span class='afl-tl-y'>" + m.y + "</span>" + m.n));
+    });
+    teaser.appendChild(tl);
+
+    var launch = el("button", "afl-launch", "\u25B6 &nbsp;enter the field guide");
+    launch.onclick = launchGuide;
+    teaser.appendChild(launch);
+
+    // Insert the teaser right after the field's blurb, ahead of the raw topic list.
+    var firstTopic = body.querySelector(".topic");
+    if (firstTopic) body.insertBefore(teaser, firstTopic);
+    else body.appendChild(teaser);
   };
 
   /* ------------------------------------------------------------------ *
