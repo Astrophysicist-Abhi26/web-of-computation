@@ -243,6 +243,10 @@ function openField(f, d) {
     window.openDataStructuresExperience();
     return;
   }
+  if (f.id === "analysis" && window.openAnalysisExperience) {
+    window.openAnalysisExperience();
+    return;
+  }
 }
 $("panel-close").addEventListener("click", () => {
   panel.classList.remove("open");
