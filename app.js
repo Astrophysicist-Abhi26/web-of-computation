@@ -227,6 +227,10 @@ function openField(f, d) {
     window.openMechanicalExperience();
     return;
   }
+  if (f.id === "wartime" && window.openWartimeExperience) {
+    window.openWartimeExperience();
+    return;
+  }
 }
 $("panel-close").addEventListener("click", () => {
   panel.classList.remove("open");
