@@ -247,6 +247,10 @@ function openField(f, d) {
     window.openAnalysisExperience();
     return;
   }
+  if (f.id === "structs" && window.openDataStructuresExperience) {
+    window.openDataStructuresExperience();
+    return;
+  }
 }
 $("panel-close").addEventListener("click", () => {
   panel.classList.remove("open");
