@@ -231,6 +231,10 @@ function openField(f, d) {
     window.openWartimeExperience();
     return;
   }
+  if (f.id === "stored" && window.openStoredProgramExperience) {
+    window.openStoredProgramExperience();
+    return;
+  }
 }
 $("panel-close").addEventListener("click", () => {
   panel.classList.remove("open");
