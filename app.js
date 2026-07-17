@@ -235,6 +235,10 @@ function openField(f, d) {
     window.openStoredProgramExperience();
     return;
   }
+  if (f.id === "aihw" && window.openAIHardwareExperience) {
+    window.openAIHardwareExperience();
+    return;
+  }
 }
 $("panel-close").addEventListener("click", () => {
   panel.classList.remove("open");
