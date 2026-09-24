@@ -175,6 +175,8 @@ function openField(f, d) {
     const body = $("panel-body");
     body.insertBefore(btn, body.children[2] || null);
   }
+  // guide-kit.js guides register themselves here by field id
+  if (window.GUIDES && GUIDES[f.id]) { GUIDES[f.id](); return; }
   if (f.id === "infotheory" && window.openInformationTheoryExperience) {
     window.openInformationTheoryExperience();
   }
@@ -235,7 +237,7 @@ $("panel-close").addEventListener("click", () => {
 });
 
 // ---------- semantic zoom ----------
-const HOME = "0 0 1600 1000";
+const HOME = "0 -90 1600 1090";   // room at the top for the pioneer constellation
 function domainBox(d) {
   // shift the domain left of centre so the side panel doesn't cover its fields
   const w = 620, h = 420, shift = innerWidth > 700 ? w * 0.14 : 0;

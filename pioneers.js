@@ -66,20 +66,17 @@ hidden.innerHTML = `<defs>
   </filter></defs>`;
 document.body.appendChild(hidden);
 
-const map = document.getElementById("map");
-const mapDefs = map.querySelector("defs");
-for (const d of DOMAINS) {
-  const g = svgEl("radialGradient", { id:"mono-" + d.id, cx:".35", cy:".3", r:".8" }, mapDefs);
-  svgEl("stop", { offset:"0", "stop-color":`hsl(${d.hue} 70% 58%)` }, g);
-  svgEl("stop", { offset:"1", "stop-color":`hsl(${d.hue} 60% 20%)` }, g);
-}
-
 /* ---------- the constellation ---------- */
-// Three staggered rows, left to right in order of each person's defining year.
-const ROWS = [52, 80, 108], X0 = 60, X1 = 1370, TR = 10;
-CHRONO.forEach((p, i) => {
-  const x = X0 + i * (X1 - X0) / (CHRONO.length - 1);
-  const y = ROWS[i % 3];
+// Twenty featured pioneers sit on the map, in two staggered rows under the
+// title, left to right in order of their defining year. Everyone (all of
+// PEOPLE) is in the gallery.
+const FEATURED = ["babbage","lovelace","boole","turing","shannon","vonneumann","hopper","mccarthy","minsky",
+  "rosenblatt","hinton","sutton","lecun","bengio","feifeili","sutskever","karpathy","hassabis","vaswani","amodei"];
+const ROWS = [22, 70], X0 = 74, X1 = 1316, TR = 19;
+const ONMAP = CHRONO.filter(p => FEATURED.includes(p.id));
+ONMAP.forEach((p, i) => {
+  const x = X0 + i * (X1 - X0) / (ONMAP.length - 1);
+  const y = ROWS[i % 2];
   const g = svgEl("g", { class:"pioneer", tabindex:-1, role:"button", "aria-label":`${p.name}, ${dates(p)}` }, Lpeople);
   svgEl("title", {}, g).textContent = `${p.name} · ${dates(p)}\n${p.epitaph}`;
   const clip = svgEl("clipPath", { id:"pc-" + p.id }, g);
@@ -89,11 +86,11 @@ CHRONO.forEach((p, i) => {
     svgEl("image", { href:pic.file, x:x - TR, y:y - TR, width:TR * 2, height:TR * 2, preserveAspectRatio:"xMidYMid slice",
       "clip-path":`url(#pc-${p.id})`, filter:"url(#woc-duotone)" }, g);
   } else {
-    svgEl("circle", { cx:x, cy:y, r:TR, fill:`url(#mono-${p.dom[0]})` }, g);
-    svgEl("text", { x, y:y + 3.2, class:"mono" }, g).textContent = initials(p);
+    const holder = svgEl("g", { "clip-path":`url(#pc-${p.id})` }, g);
+    holder.innerHTML = AVATAR.svg(p, hueOf(p)).replace("<svg ", `<svg x="${x - TR}" y="${y - TR}" width="${TR * 2}" height="${TR * 2}" style="width:${TR * 2}px;height:${TR * 2}px" `);
   }
   svgEl("circle", { cx:x, cy:y, r:TR, class:"pring" + (p.died == null ? " alive" : "") }, g);
-  svgEl("text", { x, y:y + TR + 8.5, class:"plabel" }, g).textContent = shortName(p);
+  svgEl("text", { x, y:y + TR + 12, class:"plabel" }, g).textContent = shortName(p);
   g.addEventListener("click", () => openPioneer(p.id));
   g.addEventListener("keydown", e => { if (e.key === "Enter") openPioneer(p.id); });
   p._el = g;
@@ -109,11 +106,11 @@ function lightFields(p, on) {
 function portraitHTML(p, size) {
   const pic = portrait(p);
   if (pic) return `<img src="${esc(pic.file)}" alt="Portrait of ${esc(p.name)}" width="${size}" height="${size}" loading="lazy">`;
-  return `<span class="pio-mono" style="--h:${hueOf(p)}">${esc(initials(p))}</span>`;
+  return `<span class="pio-av">${AVATAR.svg(p, hueOf(p))}</span>`;
 }
 function creditHTML(p) {
   const pic = portrait(p);
-  if (!pic) return `<figcaption>Portrait coming soon</figcaption>`;
+  if (!pic) return `<figcaption>Illustrated portrait</figcaption>`;
   const lic = pic.licenseUrl ? `<a href="${esc(pic.licenseUrl)}" target="_blank" rel="noopener">${esc(pic.license)}</a>` : esc(pic.license || "");
   const src = pic.source ? ` · <a href="${esc(pic.source)}" target="_blank" rel="noopener">source</a>` : "";
   return `<figcaption>Photo: ${esc(pic.artist || "unknown")} · ${lic}${src} · duotone applied</figcaption>`;
@@ -182,7 +179,7 @@ gal.innerHTML = `
     <div class="pg-head">
       <div>
         <h2 id="pg-title">Pioneers of Computation</h2>
-        <p class="pg-sub"><span id="pg-count"></span> people, in order of the work that put them on the map</p>
+        <p class="pg-sub"><span id="pg-count"></span> people, in order of the work that put them on the map. Those marked ✦ also appear in the sky.</p>
       </div>
       <button class="pg-close" aria-label="Close gallery">✕</button>
     </div>
@@ -231,7 +228,7 @@ function renderGallery() {
     html += `<button class="pg-card${p.y > S.year ? " later" : ""}" data-id="${p.id}">
         <span class="pg-pic">${portraitHTML(p, 64)}</span>
         <span class="pg-txt">
-          <b>${esc(p.name)}</b>
+          <b>${esc(p.name)}${FEATURED.includes(p.id) ? ' <span class="pg-star" title="In the sky">✦</span>' : ""}</b>
           <span class="pg-dates">${esc(dates(p))}${p.died == null ? " · living" : ""}</span>
           <span class="pg-ep">${esc(p.epitaph)}</span>
           <span class="pg-dots"><span class="pg-y">${p.y}</span>${dots}</span>
@@ -271,11 +268,11 @@ if (toggles) {
 const css = `
 /* constellation */
 .pioneer { transform-box: fill-box; }
-.pioneer .pring { fill: none; stroke: rgba(255,233,168,.75); stroke-width: 1.1; filter: drop-shadow(0 0 4px rgba(255,233,168,.7)); }
+.pioneer .pring { fill: none; stroke: rgba(255,233,168,.75); stroke-width: 1.4; filter: drop-shadow(0 0 4px rgba(255,233,168,.7)); }
 .pioneer .pring.alive { stroke: #f5c451; }
 .pioneer .mono { font-family: "Fraunces", Georgia, serif; font-size: 8.5px; font-weight: 600; fill: #fff4dc;
   text-anchor: middle; pointer-events: none; }
-.pioneer .plabel { font-family: "IBM Plex Mono", monospace; font-size: 8px; fill: #ffe9a8; text-anchor: middle;
+.pioneer .plabel { font-family: "IBM Plex Mono", monospace; font-size: 10px; fill: #ffe9a8; text-anchor: middle;
   paint-order: stroke; stroke: rgba(0,0,0,.7); stroke-width: 2.4px; }
 .pioneer image, .pioneer circle:not(.pring) { transition: opacity .2s; }
 .pioneer:hover .pring, .pioneer:focus-visible .pring { stroke: #fff; stroke-width: 2; }
@@ -291,13 +288,15 @@ body.topic-focus .pioneer { opacity: 0 !important; }
 .pio .meta { margin-bottom: .2rem !important; }
 .pio-alive { color: #9fe8c0; border: 1px solid rgba(159,232,192,.5); border-radius: 999px; padding: 0 .45rem; margin-left: .3rem; }
 .pio-hero { margin: 0 0 1rem; display: flex; flex-direction: column; align-items: center; gap: .45rem; }
-.pio-hero img, .pio-hero .pio-mono { width: 148px; height: 148px; border-radius: 50%; object-fit: cover; object-position: 50% 22%;
+.pio-hero img, .pio-hero .pio-mono, .pio-hero .pio-av { width: 148px; height: 148px; border-radius: 50%; object-fit: cover; object-position: 50% 22%;
   box-shadow: 0 0 0 3px var(--gold), 0 0 28px rgba(245,196,81,.45); }
 .pio-hero img, .pg-pic img { filter: url(#woc-duotone); }
 .pio-hero img:hover { filter: none; }
 .pio-mono { display: grid; place-items: center; font-family: "Fraunces", Georgia, serif; font-weight: 600; color: #fff4dc;
   background: radial-gradient(circle at 35% 30%, hsl(var(--h) 70% 58%), hsl(var(--h) 60% 18%)); letter-spacing: .02em; }
 .pio-hero .pio-mono { font-size: 3rem; }
+.pio-av { display: block; overflow: hidden; flex: none; }
+.pio-av svg { display: block; width: 100%; height: 100%; }
 .pio-hero figcaption { font-family: "IBM Plex Mono", monospace; font-size: .62rem; color: var(--dim); text-align: center; }
 .pio-hero figcaption a { color: var(--dim); }
 .pio-role { font-size: .88rem; color: var(--dim); margin-bottom: .8rem; }
@@ -363,7 +362,7 @@ body.topic-focus .pioneer { opacity: 0 !important; }
   color: var(--ink); font: inherit; transition: border-color .15s, background .15s; }
 .pg-card:hover, .pg-card:focus-visible { border-color: var(--gold); background: rgba(245,196,81,.07); outline: none; }
 .pg-card.later { opacity: .55; }
-.pg-pic img, .pg-pic .pio-mono { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; object-position: 50% 22%;
+.pg-pic img, .pg-pic .pio-mono, .pg-pic .pio-av { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; object-position: 50% 22%;
   box-shadow: 0 0 0 2px rgba(245,196,81,.6); }
 .pg-pic .pio-mono { font-size: 1.35rem; }
 .pg-card:hover .pg-pic img { filter: none; }
@@ -375,6 +374,7 @@ body.topic-focus .pioneer { opacity: 0 !important; }
 .pg-dots i { width: 7px; height: 7px; border-radius: 50%; background: hsl(var(--h) 80% 62%); }
 .pg-y { font-family: "IBM Plex Mono", monospace; font-size: .62rem; color: var(--dim); margin-right: .2rem; }
 .pg-empty { color: var(--dim); padding: 2rem 0; }
+.pg-star { color: var(--gold); font-size: .8rem; }
 body.pg-open { overflow: hidden; }
 @media (max-width: 700px) {
   .pg-head { padding: 1rem 1rem .5rem; } .pg-tools, .pg-body { padding-left: 1rem; padding-right: 1rem; }
