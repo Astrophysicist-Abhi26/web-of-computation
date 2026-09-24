@@ -34,8 +34,9 @@ git push origin main
   are the nine load-bearing moments.
 - **Containment shells**: AI ⊃ ML ⊃ Neural Networks ⊃ Deep Learning, drawn as
   nested orbits — the buzzword hierarchy, resolved.
-- **Pioneer constellation** (top): 65 circular portraits in chronological order,
-  from Babbage to Amodei. Click one for a full biography (see below).
+- **Pioneer constellation** (top): 20 featured pioneers as illustrated avatars,
+  in chronological order. Click one for a full biography; all 65 are in the
+  pioneer gallery (see below).
 - **Status weather** on every field: 🏛 marble glow · 🔥 flickering ember ·
   ⚙️ steady teal · 🪦 dim gravestone · 🧟 pulsing back to life.
 - **Gold bridges** with mediating concepts (Shannon 1937, entropy → cross-entropy,
@@ -72,13 +73,35 @@ prefer reduced motion get the final layout without animation.
   the previous/next pioneer in time.
 - **Gallery**: the **▦ pioneer gallery** button lists everyone grouped by era,
   with search and filters (by domain, or living only).
-- **Portraits**: see `portraits/README.md`. Until a freely licensed photo is
-  added, each person gets a monogram in their domain's colour. Every photo is
-  shown through one gold-and-purple duotone so the set looks consistent.
+- **Avatars and portraits**: every pioneer has an original illustrated avatar
+  in one consistent style (`avatars.js`, traits per person). A freely licensed
+  photo added in `portraits/` replaces it automatically (see
+  `portraits/README.md`); photos are shown through one gold-and-purple duotone
+  so the set looks consistent.
   `tools/fetch_portraits.py` can fetch licensed photos from Wikimedia Commons
   and write the credits automatically.
 - To add a person: append an entry to `PEOPLE` in `pioneers-data.js` (the
   header comment lists the fields). Dates marked "c." are approximate.
+
+## Field guides for every field
+
+Every one of the 31 fields now opens an interactive field guide in the side
+panel: a timeline, working labs, WHAT · HOW · STORY · TODAY chapters, things to
+try, the field's topics, and landmark sources. The 17 newest guides live in
+`guides/` and share `guide-kit.js`, so each file holds only its content and
+labs:
+
+| Domain | Guides (labs) |
+|---|---|
+| ML & Deep Learning | Neural Prehistory · Classical / Statistical ML · Learning Paradigms · Deep Learning Architectures · The LLM Era · Deep RL & Games |
+| AI (symbolic) | Founding Documents · Symbolic AI / GOFAI · Classic Milestones · Agents & Decision Theory |
+| Algorithms | Design Paradigms |
+| Languages & Systems | Languages & Paradigms · Compilers & Type Theory · Operating & Distributed Systems |
+| Data | Databases · Statistics as Computation · Data Engineering & Practice |
+
+To add a guide: create `guides/<field-id>.js` that calls
+`GuideKit.register("<field-id>", { … })` (copy any existing guide as a
+template) and add its `<script>` tag to `index.html`.
 
 ## Information & Cryptography field guides
 
