@@ -34,13 +34,51 @@ git push origin main
   are the nine load-bearing moments.
 - **Containment shells**: AI ⊃ ML ⊃ Neural Networks ⊃ Deep Learning, drawn as
   nested orbits — the buzzword hierarchy, resolved.
-- **Pioneer constellation** (top): 15 portrait stars. Click Turing and the four
-  continents he touched light up; each card carries dates, epitaph, and fate.
+- **Pioneer constellation** (top): 65 circular portraits in chronological order,
+  from Babbage to Amodei. Click one for a full biography (see below).
 - **Status weather** on every field: 🏛 marble glow · 🔥 flickering ember ·
   ⚙️ steady teal · 🪦 dim gravestone · 🧟 pulsing back to life.
 - **Gold bridges** with mediating concepts (Shannon 1937, entropy → cross-entropy,
   Bellman → RL, CUDA → AlexNet…) and **red lightning controversy edges**
 (Minsky vs Rosenblatt, Chomsky vs LLMs).
+
+## Crack-open animations (`crack.js`)
+
+Clicking a domain cracks it open into exactly as many pieces as it has fields;
+clicking a field cracks it into its topics, which then orbit it (click a topic
+to jump to its card in the panel). Five styles are built in, so they can be
+compared live before one is chosen:
+
+| | Style | Used by default on |
+|---|---|---|
+| A | Walnut crack | Foundations, ML & Deep Learning |
+| B | Glass shatter | Hardware, Data Science |
+| C | Peel & bloom | Algorithms |
+| D | Aperture iris | Languages, Symbolic AI |
+| E | Supernova | Information & Cryptography |
+
+At field level the styles rotate, so every domain shows several of them. The
+**✦ crack style** picker (bottom-left) forces one style everywhere and replays
+it immediately; the choice is remembered in the browser. To settle on one style
+for good, edit `DOMAIN_STYLE` / `styleForField` in `crack.js`. Visitors who
+prefer reduced motion get the final layout without animation.
+
+## Pioneers (`pioneers-data.js`, `pioneers.js`)
+
+- **65 pioneers**, from Babbage to today's frontier labs: each has a role line,
+  an epitaph, a year-by-year timeline, key papers with links, a legacy note,
+  and links to their fields on the map ("On the map" lights them up).
+- **Biography panel**: click any portrait in the constellation. Arrows step to
+  the previous/next pioneer in time.
+- **Gallery**: the **▦ pioneer gallery** button lists everyone grouped by era,
+  with search and filters (by domain, or living only).
+- **Portraits**: see `portraits/README.md`. Until a freely licensed photo is
+  added, each person gets a monogram in their domain's colour. Every photo is
+  shown through one gold-and-purple duotone so the set looks consistent.
+  `tools/fetch_portraits.py` can fetch licensed photos from Wikimedia Commons
+  and write the credits automatically.
+- To add a person: append an entry to `PEOPLE` in `pioneers-data.js` (the
+  header comment lists the fields). Dates marked "c." are approximate.
 
 ## Information & Cryptography field guides
 
@@ -64,8 +102,8 @@ All content lives in **`js/data.js`** — no code changes needed:
 - Add a topic: append `{n, y, who, s, d}` to any field's `topics` array.
 - Add a field: append to `FIELDS.<domain>` — it auto-orbits its domain.
 - Statuses: `found` 🏛 · `fire` 🔥 · `work` ⚙️ · `obs` 🪦 · `rev` 🧟.
-- Add a pioneer, a bridge, or a controversy the same way; the scrubber picks up
-  every `y` automatically.
+- Add a bridge or a controversy the same way; the scrubber picks up every `y`
+  automatically. Pioneers live in `pioneers-data.js`.
 
 ## Playable atoms (Part 3 — done)
 

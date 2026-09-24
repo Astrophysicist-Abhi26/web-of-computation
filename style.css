@@ -63,6 +63,9 @@ header h1 em { color: var(--tint); font-style: normal; transition: color 1.2s ea
 }
 #back-btn:hover, #back-btn:focus-visible { border-color: var(--gold); color: var(--gold); }
 body.zoomed #back-btn { display: block; }
+/* keep the back button clear of the open side panel */
+body:has(#panel.open) #back-btn { margin-right: calc(min(420px, 92vw) - 0.4rem); }
+@media (max-width: 700px) { body:has(#panel.open) #back-btn { display: none; } }
 
 /* ---------- the sky (SVG) ---------- */
 #sky { position: fixed; inset: 0; z-index: 2; }

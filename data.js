@@ -334,53 +334,6 @@ ml: [
 ]
 };
 
-// -------- PIONEERS (constellation) --------
-const PEOPLE = [
-  { name:"Charles Babbage", dates:"1791–1871", y:1822, domains:["hard"],
-    epitaph:"Designed the computer a century early.",
-    fate:"Died embittered, engine unbuilt. A working Difference Engine was finally constructed in 1991 — it works." },
-  { name:"Ada Lovelace", dates:"1815–1852", y:1843, domains:["hard","found"],
-    epitaph:"First programmer; first to see computers as symbol machines.",
-    fate:"Died at 36 of uterine cancer. Her 'objection' — machines only do what we order — was named and rebutted by Turing in 1950." },
-  { name:"George Boole", dates:"1815–1864", y:1847, domains:["found"],
-    epitaph:"Turned logic into algebra.",
-    fate:"Died of pneumonia after lecturing in rain-soaked clothes." },
-  { name:"Alan Turing", dates:"1912–1954", y:1936, domains:["found","hard","info","ai"],
-    epitaph:"Defined computation, helped break Enigma, asked if machines can think.",
-    fate:"Prosecuted in 1952 for homosexuality and chemically castrated. Died of cyanide poisoning at 41, ruled suicide. Royal pardon 2013; now on the UK £50 note. He touches four continents of this map — more than anyone." },
-  { name:"John von Neumann", dates:"1903–1957", y:1944, domains:["hard","algo","ai"],
-    epitaph:"Architecture, game theory, Monte Carlo, self-replication.",
-    fate:"Died at 53 of cancer, possibly from atomic-test exposure — working on 'The Computer and the Brain' to the end." },
-  { name:"Claude Shannon", dates:"1916–2001", y:1937, domains:["info","hard","ai"],
-    epitaph:"Invented the bit — and twice bridged logic to reality (1937, 1948).",
-    fate:"Lived to 84 juggling and building maze-solving mice; Alzheimer's took his memory as the internet he enabled bloomed." },
-  { name:"Grace Hopper", dates:"1906–1992", y:1952, domains:["lang"],
-    epitaph:"Compilers: made programming human.",
-    fate:"Rear Admiral, US Navy. Worked until 85. Kept a clock running counterclockwise to remind people conventions are choices." },
-  { name:"John McCarthy", dates:"1927–2011", y:1956, domains:["ai","lang"],
-    epitaph:"Coined 'artificial intelligence'; created LISP.",
-    fate:"Lived just long enough to see the deep-learning dawn he was skeptical of." },
-  { name:"Frank Rosenblatt", dates:"1928–1971", y:1958, domains:["ml"],
-    epitaph:"The perceptron.",
-    fate:"Died in a boating accident at 43, in the depth of his field's rejection. Vindicated fifteen years posthumously by backprop." },
-  { name:"Marvin Minsky", dates:"1927–2016", y:1956, domains:["ai","ml"],
-    epitaph:"Symbolic AI's champion; the perceptron's prosecutor.",
-    fate:"Lived to 88 — long enough to watch deep networks conquer everything he doubted." },
-  { name:"Dennis Ritchie", dates:"1941–2011", y:1972, domains:["lang"],
-    epitaph:"C and Unix.",
-    fate:"Died the same week as Steve Jobs; hackers say the world mourned the wrong one." },
-  { name:"E. F. Codd", dates:"1923–2003", y:1970, domains:["data"],
-    epitaph:"Data as relations.",
-    fate:"IBM resisted his relational model — it threatened their existing products. It won anyway." },
-  { name:"Geoffrey Hinton", dates:"1947–", y:1986, domains:["ml"],
-    epitaph:"Carried backprop through two winters.",
-    fate:"Nobel Prize (Physics!) 2024. Quit Google in 2023 to warn about the risks of what he built — the field's Oppenheimer arc." },
-  { name:"Fei-Fei Li", dates:"1976–", y:2009, domains:["ml","data"],
-    epitaph:"ImageNet: proved data is the third pillar.",
-    fate:"Active — human-centered AI at Stanford." },
-  { name:"Rich Sutton", dates:"1947–", y:1988, domains:["ml","ai"],
-    epitaph:"Reinforcement learning; the Bitter Lesson.",
-    fate:"Turing Award 2024 (with Andrew Barto). Still betting on general methods + compute." }
-];
+// -------- PIONEERS: see pioneers-data.js --------
 
 const TIMELINE_STARS = [1936, 1937, 1945, 1948, 1956, 2007, 2012, 2017, 2022];
