@@ -73,13 +73,15 @@ prefer reduced motion get the final layout without animation.
   the previous/next pioneer in time.
 - **Gallery**: the **▦ pioneer gallery** button lists everyone grouped by era,
   with search and filters (by domain, or living only).
-- **Avatars and portraits**: every pioneer has an original illustrated avatar
-  in one consistent style (`avatars.js`, traits per person). A freely licensed
-  photo added in `portraits/` replaces it automatically (see
-  `portraits/README.md`); photos are shown through one gold-and-purple duotone
-  so the set looks consistent.
+- **Portraits**: 12 featured pioneers sit in one row of large portraits under
+  the title; all 65 are in the gallery. Every portrait gets one "spectrum"
+  treatment: the photo in black and white under a rainbow tint, framed by
+  ring arcs in the person's domain colour. Until a photo is added, the same
+  frame shows the person's initials. Add a freely licensed photo in
+  `portraits/` (see `portraits/README.md`) and it appears automatically.
   `tools/fetch_portraits.py` can fetch licensed photos from Wikimedia Commons
-  and write the credits automatically.
+  and write the credits for you. To change who is on the map, edit
+  `FEATURED` in `pioneers.js`.
 - To add a person: append an entry to `PEOPLE` in `pioneers-data.js` (the
   header comment lists the fields). Dates marked "c." are approximate.
 
@@ -150,17 +152,30 @@ All content lives in **`js/data.js`** — no code changes needed:
 - Add a bridge or a controversy the same way; the scrubber picks up every `y`
   automatically. Pioneers live in `pioneers-data.js`.
 
-## Playable atoms (Part 3 — done)
+## Playable atoms
 
-Open via the **⚛ playable atoms** button, or from the gold launch button inside
-Computability, Classical Cryptography, Neural Prehistory, Deep Learning, and
-LLM Era field panels:
+Open via the **⚛ playable atoms** button, or from the gold "⚛ play" buttons
+inside the matching fields' panels:
 
-1. **Turing machine** — step/run a binary increment on a live tape.
-2. **Enigma** — historical rotor I·II·III wirings + reflector B; watch the
-   signal path and the rotors step (why the same key gives different letters).
-3. **Perceptron vs XOR** — 1958→1969→1986 in one toy: a single layer thrashes
-   forever; tick “hidden layer” and backprop bends the boundary.
-4. **Gradient descent marble** — one η slider: too hot diverges, too cold crawls.
-5. **Attention head** — live softmax(Q·Kᵀ/τ) heatmap over four tokens with a
-   temperature slider.
+1. **Turing machine** (Computability) — step/run a binary increment on a live tape.
+2. **Enigma** (Classical Cryptography) — historical rotor wirings, reflectors,
+   plugboard and double-stepping.
+3. **Perceptron vs XOR** (Neural Prehistory) — 1958→1969→1986 in one toy.
+4. **Gradient descent marble** (Deep Learning) — one η slider: too hot
+   diverges, too cold crawls.
+5. **Attention head** (LLM Era) — live softmax(Q·Kᵀ/τ) with a temperature slider.
+6. **Neural-net playground** (Neural Prehistory, Deep Learning;
+   `atoms2.js`) — train a small network live on blobs, XOR, a circle or a
+   spiral. Change layers, neurons, activation, optimizer (Adam or SGD) and
+   learning rate, or add hand-made features. Each neuron shows the picture it
+   has learned, and the weights show as coloured lines.
+7. **NAND → CPU** (Stored Program, Wartime) — build NOT, AND, OR, XOR, a
+   half adder and a full adder from NAND gates (click inputs, live wires,
+   truth tables); a 4-bit ALU with ripple carry, two's-complement
+   subtraction and flags; and a 16-byte SAP-1-style stored-program computer
+   with editable memory, fetch–decode–execute trace and three programs
+   (count down, multiply, Fibonacci).
+8. **Life & Rule 110** (Computability, Automata) — Conway's Game of Life
+   with drawing, glider gun, spaceships and random soups; and all 256
+   elementary cellular automata with a clickable rule table (30, 90, 110,
+   184 presets).

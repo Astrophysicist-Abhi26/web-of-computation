@@ -1,7 +1,7 @@
 # Pioneer portraits
 
-Every pioneer on the map shows a circular portrait. Until a photo is added,
-they get a monogram in their domain's colour.
+Every pioneer shows a circular portrait with ring arcs around it. Until a
+photo is added, the frame shows the person's initials.
 
 ## Adding a portrait by hand
 
@@ -39,12 +39,14 @@ It needs internet access to `en.wikipedia.org`, `commons.wikimedia.org`
 and `upload.wikimedia.org`. Check the results by eye before committing:
 the lead image is usually, but not always, a good portrait.
 
-## Why the gold-and-purple look?
+## Why the rainbow look?
 
-All portraits pass through one duotone filter (`#woc-duotone`, defined in
-`pioneers.js`), so photos from different decades and cameras read as one
-set. The filter is applied in the browser; the files stay unmodified.
-Hover a portrait in the biography panel or gallery to see the original.
+Every photo is shown in black and white under a rainbow tint (the
+`#woc-gray` filter and `woc-spec-*` gradients in `pioneers.js`), inside
+ring arcs in the person's domain colour. Photos from different decades and
+cameras then read as one set. The effect is applied in the browser; the
+files stay unmodified. Hover a portrait in the biography panel or gallery to
+see the original.
 
 ## Licences to avoid
 

@@ -167,7 +167,7 @@ function openField(f, d) {
     meta: "b. " + f.y, blurb: f.d, topics: f.topics
   });
   // Part 3: if this field has a playable atom, offer it at the top of the panel
-  if (window.ATOM_FOR && ATOM_FOR[f.id]) {
+  if (typeof ATOM_FOR !== "undefined" && ATOM_FOR[f.id]) {   // a top-level const in atoms.js, not a window property
     const btn = document.createElement("button");
     btn.className = "atom-launch";
     btn.textContent = "⚛ play: " + ATOM_NAMES[ATOM_FOR[f.id]];
@@ -237,7 +237,7 @@ $("panel-close").addEventListener("click", () => {
 });
 
 // ---------- semantic zoom ----------
-const HOME = "0 -90 1600 1090";   // room at the top for the pioneer constellation
+const HOME = "0 -190 1600 1190";   // room at the top for the pioneer portraits
 function domainBox(d) {
   // shift the domain left of centre so the side panel doesn't cover its fields
   const w = 620, h = 420, shift = innerWidth > 700 ? w * 0.14 : 0;
