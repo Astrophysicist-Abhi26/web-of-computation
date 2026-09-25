@@ -79,7 +79,7 @@ function makeEdge(e, cls) {
   const d = curve(e.a, e.b);
   const vis = el("path", { class: cls, d }, Ledge);
   const hit = el("path", { class: "bridge-hit", d }, Ledge);
-  hit.addEventListener("click", () => openPanel({
+  hit.addEventListener("click", () => window.openEdgeDetail ? openEdgeDetail(e, cls) : openPanel({
     kind: cls === "bridge" ? "Gold bridge" : "Controversy ⚡",
     title: e.label, meta: `${D(e.a).name} ↔ ${D(e.b).name} · ${e.y}`,
     blurb: cls === "bridge"

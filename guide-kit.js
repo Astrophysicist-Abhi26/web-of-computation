@@ -179,5 +179,5 @@ function rng(seed) {
 function gauss(r) { let u = 0, v = 0; while (!u) u = r(); while (!v) v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 const C = { gold:"#f5c451", teal:"#3fd0c9", red:"#ff7847", green:"#57e08a", violet:"#b48cff", ink:"#e8e4f4", dim:"#9a93b8", blue:"#7aa8ff", pink:"#ff7ac8" };
 
-window.GuideKit = { register, canvas, rng, gauss, C, fieldById };
+window.GuideKit = { register, canvas, rng, gauss, C, fieldById, ensureStyles };
 })();

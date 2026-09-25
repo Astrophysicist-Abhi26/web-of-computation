@@ -505,6 +505,7 @@ function focusTopicCard(i) {
   if (!document.getElementById("panel").classList.contains("open")) return;
   c.scrollIntoView({ behavior:REDUCED ? "auto" : "smooth", block:"center" });
   c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash");
+  if (window.WOC_TOPIC_OPEN) WOC_TOPIC_OPEN(c);   // extras.js: open its "deeper" drawer
 }
 
 function crackField(f, d) {

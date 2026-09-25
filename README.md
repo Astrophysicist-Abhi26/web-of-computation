@@ -118,11 +118,33 @@ without changing the main map:
   conceptual chapters, and links from the 1976 public-key paper through NIST's
   current post-quantum standards work.
 
+## Going deeper (`topics-data.js`, `extras.js`)
+
+- **Every topic has a "deeper" drawer.** All 119 topic cards, in every field,
+  open to *the idea · the story · why it matters now*, a primary source, and
+  chips for any pioneer involved. Clicking a topic node on the map scrolls to
+  its card and opens the drawer. "open all" expands a whole field at once.
+  Guides that replace the raw topic list get it added back at the end.
+- **Bridges and controversies are full stories.** Each gold bridge shows what
+  flows between the two continents, the history, where it stands today, the
+  people and the sources. The two ⚡ controversies (Minsky vs Rosenblatt,
+  Chomsky vs LLMs) set out both sides and the current evidence, and let you
+  pick a side (saved only in your browser).
+- **Extra labs** for the thinner guides: Huffman coding with a live tree and
+  Hamming(7,4) error correction (Information Theory), and the SHA-256
+  avalanche with a 500-flip histogram (Modern Cryptography; pure-JS SHA-256,
+  checked against Node's `crypto`).
+
+To edit a topic's depth, find its `"fieldId|topic name"` key in
+`topics-data.js`. Bridge and controversy stories live in `EDGE_DETAIL` in
+`extras.js`, keyed by the edge's label in `data.js`.
+
 ## Editing (the whole point)
 
 All content lives in **`js/data.js`** — no code changes needed:
 
-- Add a topic: append `{n, y, who, s, d}` to any field's `topics` array.
+- Add a topic: append `{n, y, who, s, d}` to any field's `topics` array
+  (and optionally its `"fieldId|name"` entry in `topics-data.js`).
 - Add a field: append to `FIELDS.<domain>` — it auto-orbits its domain.
 - Statuses: `found` 🏛 · `fire` 🔥 · `work` ⚙️ · `obs` 🪦 · `rev` 🧟.
 - Add a bridge or a controversy the same way; the scrubber picks up every `y`
