@@ -79,7 +79,7 @@ function makeEdge(e, cls) {
   const d = curve(e.a, e.b);
   const vis = el("path", { class: cls, d }, Ledge);
   const hit = el("path", { class: "bridge-hit", d }, Ledge);
-  hit.addEventListener("click", () => openPanel({
+  hit.addEventListener("click", () => window.openEdgeDetail ? openEdgeDetail(e, cls) : openPanel({
     kind: cls === "bridge" ? "Gold bridge" : "Controversy ⚡",
     title: e.label, meta: `${D(e.a).name} ↔ ${D(e.b).name} · ${e.y}`,
     blurb: cls === "bridge"
@@ -131,32 +131,8 @@ for (const d of DOMAINS) {
   });
 }
 
-// ---------- pioneers (constellation arc across the top) ----------
-function starPath(x, y, r) {
-  let p = "";
-  for (let i = 0; i < 10; i++) {
-    const rr = i % 2 ? r * 0.45 : r;
-    const a = -Math.PI / 2 + i * Math.PI / 5;
-    p += (i ? "L" : "M") + (x + rr * Math.cos(a)).toFixed(1) + " " + (y + rr * Math.sin(a)).toFixed(1);
-  }
-  return p + "Z";
-}
-PEOPLE.forEach((p, i) => {
-  const x = 120 + i * (1360 / (PEOPLE.length - 1));
-  const y = 62 + (i % 2) * 26;
-  const g = el("g", { class: "pioneer", tabindex: -1, role: "button", "aria-label": p.name }, Lpeople);
-  el("path", { d: starPath(x, y, 7) }, g);
-  el("text", { x, y: y + 20 }, g).textContent = p.name.split(" ").pop();
-  g.addEventListener("click", () => {
-    DOMAINS.forEach(d => d._el.classList.toggle("linked", p.domains.includes(d.id)));
-    openPanel({
-      kind: "Pioneer", title: p.name, meta: p.dates,
-      blurb: p.epitaph, fate: p.fate,
-      after: () => DOMAINS.forEach(d => d._el.classList.remove("linked"))
-    });
-  });
-  p._el = g;
-});
+// ---------- pioneers ----------
+// The constellation, biography panel and gallery live in pioneers.js.
 
 // ---------- panel ----------
 const panel = $("panel");
@@ -185,12 +161,13 @@ function statusMark(s) {
   return { found: "🏛", fire: "🔥", work: "⚙️", obs: "🪦", rev: "🧟" }[s] || "";
 }
 function openField(f, d) {
+  if (window.WOC_CRACK) WOC_CRACK.field(f, d);   // crack.js: the field breaks into its topics
   openPanel({
     kind: statusMark(f.s) + " Field of " + d.name, title: f.name,
     meta: "b. " + f.y, blurb: f.d, topics: f.topics
   });
   // Part 3: if this field has a playable atom, offer it at the top of the panel
-  if (window.ATOM_FOR && ATOM_FOR[f.id]) {
+  if (typeof ATOM_FOR !== "undefined" && ATOM_FOR[f.id]) {   // a top-level const in atoms.js, not a window property
     const btn = document.createElement("button");
     btn.className = "atom-launch";
     btn.textContent = "⚛ play: " + ATOM_NAMES[ATOM_FOR[f.id]];
@@ -198,6 +175,8 @@ function openField(f, d) {
     const body = $("panel-body");
     body.insertBefore(btn, body.children[2] || null);
   }
+  // guide-kit.js guides register themselves here by field id
+  if (window.GUIDES && GUIDES[f.id]) { GUIDES[f.id](); return; }
   if (f.id === "infotheory" && window.openInformationTheoryExperience) {
     window.openInformationTheoryExperience();
   }
@@ -258,17 +237,26 @@ $("panel-close").addEventListener("click", () => {
 });
 
 // ---------- semantic zoom ----------
-const HOME = "0 0 1600 1000";
+let HOME = "0 -190 1600 1190";   // room at the top for the pioneer portraits
+// pioneers.js changes the home view to suit the chosen pioneer layout
+function setHome(v) { HOME = v; if (!S.zoomed) animateViewBox(HOME); }
+function domainBox(d) {
+  // shift the domain left of centre so the side panel doesn't cover its fields
+  const w = 620, h = 420, shift = innerWidth > 700 ? w * 0.14 : 0;
+  return `${d.x - w / 2 + shift} ${d.y - h / 2} ${w} ${h}`;
+}
 function zoomTo(d) {
   S.zoomed = d;
   document.body.classList.add("zoomed");
-  const w = 620, h = 420;
-  animateViewBox(`${d.x - w / 2} ${d.y - h / 2} ${w} ${h}`);
+  animateViewBox(domainBox(d));
   document.querySelectorAll(".field").forEach(f =>
     f.classList.toggle("active", f.dataset.dom === d.id));
   openPanel({ kind: "Domain", title: d.name, meta: "b. " + d.y0, blurb: d.blurb });
+  if (window.WOC_CRACK) WOC_CRACK.domain(d);   // crack.js: the domain breaks open
 }
 $("back-btn").addEventListener("click", () => {
+  if (window.WOC_CRACK && WOC_CRACK.back()) return;   // leave a field's topics first
+  if (window.WOC_CRACK) WOC_CRACK.reset();
   S.zoomed = null;
   document.body.classList.remove("zoomed");
   animateViewBox(HOME);
@@ -307,7 +295,7 @@ function setYear(y) {
   for (const id in FIELDS) for (const f of FIELDS[id]) f._el.classList.toggle("unborn", f.y > y);
   for (const b of BRIDGES) b._el.classList.toggle("unborn", b.y > y);
   for (const c of CONTROVERSIES) c._el.classList.toggle("unborn", c.y > y);
-  for (const p of PEOPLE) p._el.classList.toggle("unborn", p.y > y);
+  for (const p of PEOPLE) if (p._el) p._el.classList.toggle("unborn", p.y > y);
 }
 $("year-slider").addEventListener("input", e => { stopPlay(); setYear(+e.target.value); });
 

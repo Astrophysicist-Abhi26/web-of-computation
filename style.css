@@ -43,10 +43,16 @@ header {
   padding: 1rem 1.4rem;
   pointer-events: none;
 }
+header::before {
+  /* a soft band so the title stays readable over the sky */
+  content: ""; position: absolute; inset: 0 0 -1.6rem 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(180deg, var(--sky1) 0%, rgba(14,6,24,.75) 55%, rgba(14,6,24,0) 100%);
+}
 header h1 {
   font-family: "Fraunces", Georgia, serif;
   font-weight: 600; font-size: 1.35rem; letter-spacing: 0.02em;
   color: var(--ink);
+  text-shadow: 0 1px 8px rgba(0,0,0,.8);
 }
 header h1 em { color: var(--tint); font-style: normal; transition: color 1.2s ease; }
 #era-label {
@@ -63,6 +69,9 @@ header h1 em { color: var(--tint); font-style: normal; transition: color 1.2s ea
 }
 #back-btn:hover, #back-btn:focus-visible { border-color: var(--gold); color: var(--gold); }
 body.zoomed #back-btn { display: block; }
+/* keep the back button clear of the open side panel */
+body:has(#panel.open) #back-btn { margin-right: calc(min(420px, 92vw) - 0.4rem); }
+@media (max-width: 700px) { body:has(#panel.open) #back-btn { display: none; } }
 
 /* ---------- the sky (SVG) ---------- */
 #sky { position: fixed; inset: 0; z-index: 2; }
@@ -142,12 +151,7 @@ body.zoomed .field.active { opacity: 1; pointer-events: auto; }
 .pioneer { cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
 body.people .pioneer { opacity: 1; pointer-events: auto; }
 .pioneer.unborn { opacity: 0.1 !important; pointer-events: none !important; }
-.pioneer path { fill: #ffe9a8; filter: drop-shadow(0 0 6px rgba(255,233,168,0.9)); }
-.pioneer text {
-  font-family: "IBM Plex Mono", monospace; font-size: 10px;
-  fill: #ffe9a8; text-anchor: middle;
-  paint-order: stroke; stroke: rgba(0,0,0,0.6); stroke-width: 2.5px;
-}
+/* portrait styles live in pioneers.js */
 
 /* ---------- glass panel ---------- */
 #panel {
