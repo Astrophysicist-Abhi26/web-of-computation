@@ -86,8 +86,7 @@ prefer reduced motion get the final layout without animation.
   `portraits/<id>.jpg` (for example `portraits/hassabis.jpg`) and it appears
   everywhere automatically. `tools/add_portrait.py` crops and files a photo
   for you and records its credit; `tools/fetch_portraits.py` fetches freely
-  licensed photos from Wikimedia Commons. To change who is on the map, edit
-  `FEATURED` in `pioneers.js`.
+  licensed photos from Wikimedia Commons.
 - To add a person: append an entry to `PEOPLE` in `pioneers-data.js` (the
   header comment lists the fields). Dates marked "c." are approximate.
 
