@@ -60,7 +60,7 @@ function portraitMarkup(p, cx, cy, R) {
   const id = "pc" + (++UID), pic = portrait(p), g = R / 40;
   const inner = pic
     ? `<circle cx="${cx}" cy="${cy}" r="${R}" fill="#1a1230"/>
-       <image href="${esc(pic.file)}" x="${cx - R}" y="${cy - R}" width="${2 * R}" height="${2 * R}" preserveAspectRatio="xMidYMin slice"/>`
+       <image href="${esc(pic.file)}" x="${cx - R}" y="${cy - R}" width="${2 * R}" height="${2 * R}" preserveAspectRatio="xMidYMin slice" image-rendering="optimizeQuality" decoding="sync"/>`
     : `<circle cx="${cx}" cy="${cy}" r="${R}" fill="url(#woc-medal)"/>
        <circle cx="${cx}" cy="${cy}" r="${(R * .84).toFixed(1)}" fill="none" stroke="rgba(245,196,81,.22)" stroke-width="${.8 * g}"/>
        <text x="${cx}" y="${cy}" dy=".36em" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="400"
@@ -80,7 +80,9 @@ hidden.setAttribute("width", 0); hidden.setAttribute("height", 0);
 hidden.setAttribute("aria-hidden", "true");
 hidden.style.position = "absolute";
 hidden.innerHTML = `<defs><radialGradient id="woc-medal" cx="38%" cy="32%" r="75%">
-  <stop offset="0" stop-color="#3a2d58"/><stop offset=".6" stop-color="#231a3b"/><stop offset="1" stop-color="#150e26"/></radialGradient></defs>`;
+  <stop offset="0" stop-color="#3a2d58"/><stop offset=".6" stop-color="#231a3b"/><stop offset="1" stop-color="#150e26"/></radialGradient>
+  <radialGradient id="woc-shade"><stop offset=".62" stop-color="#000" stop-opacity=".55"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+  <radialGradient id="woc-glow"><stop offset=".6" stop-color="#ffe296" stop-opacity=".32"/><stop offset="1" stop-color="#ffe296" stop-opacity="0"/></radialGradient></defs>`;
 document.body.appendChild(hidden);
 
 // Look for portraits/<id>.jpg for everyone without a credits entry, and
@@ -160,6 +162,7 @@ function clearLayout() {
 function svgPerson(p, x, y, R, cls) {
   const g = svgEl("g", { class:"pioneer" + (cls ? " " + cls : ""), tabindex:-1, role:"button", "aria-label":`${p.name}, ${dates(p)}` }, Lpeople);
   svgEl("title", {}, g).textContent = `${p.name} · ${dates(p)}\n${p.epitaph}`;
+  svgEl("circle", { cx:x, cy:y + R * .08, r:R * 1.32, fill:`url(#${cls === "star" ? "woc-glow" : "woc-shade"})`, class:"pt-shade" }, g);
   const holder = svgEl("g", { class:"pt-hold" }, g);
   holder.innerHTML = portraitMarkup(p, x, y, R);
   Object.assign(p, { _holder:holder, _x:x, _y:y, _R:R, _el:g });
@@ -203,7 +206,7 @@ const BUILD = {
       const hit = svgEl("path", { d:path.getAttribute("d"), class:"pio-link-hit" }, lines);
       svgEl("title", {}, hit).textContent = why;
     }
-    list.forEach(p => { const [x, y] = pos[p.id]; svgPerson(p, x, y, 25, "star"); });
+    list.forEach(p => { const [x, y] = pos[p.id]; svgPerson(p, x, y, 30, "star"); });
   },
   home() {
     const R = 22;
@@ -467,7 +470,7 @@ const css = `
 .pioneer .pt-ring { transition: stroke .2s, stroke-width .2s; }
 .pioneer:hover .pt-ring, .pioneer:focus-visible .pt-ring { stroke: #ffe39a; stroke-width: 2.6; }
 .pioneer:hover .plabel { fill: #fff; }
-.pioneer { filter: drop-shadow(0 4px 10px rgba(0,0,0,.55)); }
+/* no CSS filters on portraits: browsers rasterise filtered SVG at low resolution and the photo blurs */
 body.zoomed .pioneer { opacity: .08 !important; pointer-events: none !important; }
 body.topic-focus .pioneer { opacity: 0 !important; }
 .field.pio-lit circle.core { stroke: var(--gold); stroke-width: 3; }
@@ -475,9 +478,8 @@ body.topic-focus .pioneer { opacity: 0 !important; }
 @keyframes pioPulse { 0%,100% { filter: drop-shadow(0 0 4px #f5c451); } 50% { filter: drop-shadow(0 0 18px #f5c451) brightness(1.6); } }
 
 /* layouts */
-.pioneer.star .pt-hold, .pioneer.near .pt-hold { transition: transform .25s ease; transform-box: fill-box; transform-origin: center; }
+.pioneer.star .pt-hold, .pioneer.near .pt-hold { transition: transform .25s ease; transform-box: fill-box; transform-origin: center; will-change: auto; }
 .pioneer.star:hover .pt-hold, .pioneer.near:hover .pt-hold, .pioneer.star:focus-visible .pt-hold { transform: scale(1.35); }
-.pioneer.star { filter: drop-shadow(0 0 12px rgba(255,226,150,.35)); }
 .pio-links { pointer-events: none; transition: opacity .5s; }
 body:not(.people) .pio-links, body.zoomed .pio-links, body.topic-focus .pio-links { opacity: 0; }
 .pio-link { fill: none; stroke: rgba(255,226,150,.38); stroke-width: 1.2; stroke-dasharray: 3 5; }
@@ -530,7 +532,6 @@ body[data-pio-layout="ribbon"] #timebar { padding-top: 5.4rem; }
 .pio-alive { color: #9fe8c0; border: 1px solid rgba(159,232,192,.5); border-radius: 999px; padding: 0 .45rem; margin-left: .3rem; }
 .pio-hero { margin: 0 0 1rem; display: flex; flex-direction: column; align-items: center; gap: .45rem; }
 .pt { display: block; overflow: visible; }
-.pio-hero .pt { filter: drop-shadow(0 6px 22px rgba(0,0,0,.5)); }
 .pio-hero figcaption { font-family: "IBM Plex Mono", monospace; font-size: .62rem; color: var(--dim); text-align: center; }
 .pio-hero figcaption a { color: var(--dim); }
 .pio-role { font-size: .88rem; color: var(--dim); margin-bottom: .8rem; }

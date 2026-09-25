@@ -2,7 +2,7 @@
 """Add one pioneer portrait from an image file you already have.
 
 Crops the image to a square (keeping the head, which is usually in the
-upper part of a portrait), resizes it to 400x400, saves it as
+upper part of a portrait), resizes it to 600x600, saves it as
 portraits/<id>.jpg and, if you give a credit, records it in
 portraits/credits.js. The site picks up portraits/<id>.jpg on its own,
 so the credit is optional, but please record where the photo came from.
@@ -24,7 +24,7 @@ import argparse, json, re, sys
 from pathlib import Path
 
 try:
-    from PIL import Image, ImageOps
+    from PIL import Image, ImageOps, ImageFilter
 except ImportError:
     sys.exit("Install Pillow first: pip install pillow")
 
@@ -38,13 +38,14 @@ def ids():
     return set(re.findall(r'\{ id:"([a-z]+)"', DATA.read_text(encoding="utf-8")))
 
 
-def crop(img, fx, fy, zoom=1.0, size=400):
+def crop(img, fx, fy, zoom=1.0, size=600):
     img = ImageOps.exif_transpose(img).convert("RGB")
     w, h = img.size
     s = int(min(w, h) / max(zoom, 1.0))
     left = min(max(int(fx * w - s / 2), 0), w - s)
     top = min(max(int(fy * h - s / 2), 0), h - s)
-    return img.crop((left, top, left + s, top + s)).resize((size, size), Image.LANCZOS)
+    out = img.crop((left, top, left + s, top + s)).resize((size, size), Image.LANCZOS)
+    return out.filter(ImageFilter.UnsharpMask(radius=1.2, percent=60, threshold=2))
 
 
 def save_credit(pid, entry):
@@ -69,7 +70,7 @@ def main():
         sys.exit(f"'{a.id}' is not an id in pioneers-data.js")
     fx, fy = (float(v) for v in a.focus.split(","))
     out = OUT / f"{a.id}.jpg"
-    crop(Image.open(a.image), fx, fy, a.zoom).save(out, quality=86, optimize=True)
+    crop(Image.open(a.image), fx, fy, a.zoom).save(out, quality=93, optimize=True, subsampling=0)
     print(f"saved {out.relative_to(ROOT)}")
     if a.artist or a.license or a.source or a.note:
         entry = {"file": f"portraits/{a.id}.jpg", "artist": a.artist, "license": a.license,
