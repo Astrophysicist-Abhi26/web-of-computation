@@ -17,4 +17,18 @@
 // ============================================================
 window.PORTRAITS = {
   hassabis: {"file": "portraits/hassabis.jpg", "artist": "", "license": "", "licenseUrl": "", "source": "", "note": "Photo supplied by the site author; copyright remains with the original photographer (source not recorded)"},
+  lovelace: {"file": "portraits/lovelace.jpg", "artist": "", "license": "", "licenseUrl": "", "source": "", "note": "Portrait supplied by the site author; rights remain with the owner of this reproduction (source not recorded)"},
+  turing: {"file": "portraits/turing.jpg", "artist": "", "license": "", "licenseUrl": "", "source": "", "note": "Photo 29 March 1951; credit: NPL Archive, Science Museum (from the file supplied). Supplied by the site author"},
+  karpathy: {"file": "portraits/karpathy.jpg", "artist": "", "license": "", "licenseUrl": "", "source": "", "note": "Photo supplied by the site author; copyright remains with the original photographer or owner (source not recorded)"},
+  babbage: {"file": "portraits/babbage.jpg", "artist": "", "license": "", "licenseUrl": "", "source": "", "note": "Photo supplied by the site author; copyright remains with the original photographer or owner (source not recorded)"},
+  shannon: {"file": "portraits/shannon.jpg", "artist": "", "license": "", "licenseUrl": "", "source": "", "note": "Photo supplied by the site author; copyright remains with the original photographer or owner (source not recorded)"},
+  amodei: {"file": "portraits/amodei.jpg", "artist": "", "license": "", "licenseUrl": "", "source": "", "note": "Photo supplied by the site author; copyright remains with the original photographer or owner (source not recorded)"},
+  feifeili: {"file": "portraits/feifeili.jpg", "artist": "", "license": "", "licenseUrl": "", "source": "", "note": "Photo supplied by the site author; copyright remains with the original photographer or owner (source not recorded)"},
+  rosenblatt: {"file": "portraits/rosenblatt.jpg", "artist": "", "license": "", "licenseUrl": "", "source": "", "note": "Photo supplied by the site author; copyright remains with the original photographer or owner (source not recorded)"},
+  hinton: {"file": "portraits/hinton.jpg", "artist": "", "license": "", "licenseUrl": "", "source": "", "note": "Photo supplied by the site author; copyright remains with the original photographer or owner (source not recorded)"},
+  sutskever: {"file": "portraits/sutskever.jpg", "artist": "", "license": "", "licenseUrl": "", "source": "", "note": "Photo supplied by the site author; copyright remains with the original photographer or owner (source not recorded)"},
+  mccarthy: {"file": "portraits/mccarthy.jpg", "artist": "", "license": "", "licenseUrl": "", "source": "", "note": "Photo supplied by the site author; copyright remains with the original photographer or owner (source not recorded)"},
+  vonneumann: {"file": "portraits/vonneumann.jpg", "artist": "", "license": "", "licenseUrl": "", "source": "", "note": "Photo supplied by the site author; copyright remains with the original photographer or owner (source not recorded)"},
+  minsky: {"file": "portraits/minsky.jpg", "artist": "", "license": "", "licenseUrl": "", "source": "", "note": "Photo supplied by the site author; copyright remains with the original photographer or owner (source not recorded)"},
+  lecun: {"file": "portraits/lecun.jpg", "artist": "", "license": "", "licenseUrl": "", "source": "", "note": "Photo supplied by the site author; copyright remains with the original photographer or owner (source not recorded)"},
 };
