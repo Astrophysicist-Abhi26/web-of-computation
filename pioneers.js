@@ -7,13 +7,10 @@
    · Gallery: everyone, grouped by era, with search and filters.
 
    Data:      PEOPLE     (pioneers-data.js)
-   Portraits: PORTRAITS  (portraits/credits.js), optional per id.
-   Every portrait gets one "spectrum" treatment: the photo in
-   black and white under a rainbow tint, framed by ring arcs in
-   the person's domain colour, so photos from different decades
-   read as one set. Without a photo, the same frame holds the
-   person's initials. Hover a photo in the panel or gallery to
-   see its original colours.
+   Portraits: a photo at portraits/<id>.jpg is picked up automatically;
+   its credit line comes from PORTRAITS (portraits/credits.js). Photos
+   are shown in their natural colours in a thin gold ring. Anyone
+   without a photo gets a quiet dark medallion with their initials.
 
    Public API:
      window.openPioneer(id)
@@ -47,71 +44,62 @@ function dates(p) {
   return `${p.born}–${p.died}`;
 }
 function hueOf(p) { const d = DOMAINS.find(d => d.id === p.dom[0]); return d ? d.hue : 45; }
-function portrait(p) { const q = PORTRAITS[p.id]; return q && q.file ? q : null; }
+// A credits entry wins; otherwise portraits/<id>.jpg is used if it exists.
+const FOUND = {};
+function portrait(p) { const q = PORTRAITS[p.id]; return q && q.file ? q : (FOUND[p.id] || null); }
 function fieldById(id) {
   for (const d of DOMAINS) for (const f of (FIELDS[d.id] || [])) if (f.id === id) return { f, d };
   return null;
 }
 
-/* ---------- shared defs: black-and-white filter + spectrum gradients ---------- */
-const SPECTRUM = ["#2f6bff", "#8b3dff", "#ff2e63", "#ff9f1c", "#f2e94e", "#2ecc71"];
-const ANGLES = [35, 95, 150, 210, 270, 330];
+/* ---------- the portrait ---------- */
+// One markup function for the map, the panel and the gallery.
+// Returns SVG children centred on (cx, cy) with portrait radius R.
+let UID = 0;
+function portraitMarkup(p, cx, cy, R) {
+  const id = "pc" + (++UID), pic = portrait(p), g = R / 40;
+  const inner = pic
+    ? `<circle cx="${cx}" cy="${cy}" r="${R}" fill="#1a1230"/>
+       <image href="${esc(pic.file)}" x="${cx - R}" y="${cy - R}" width="${2 * R}" height="${2 * R}" preserveAspectRatio="xMidYMin slice"/>`
+    : `<circle cx="${cx}" cy="${cy}" r="${R}" fill="url(#woc-medal)"/>
+       <circle cx="${cx}" cy="${cy}" r="${(R * .84).toFixed(1)}" fill="none" stroke="rgba(245,196,81,.22)" stroke-width="${.8 * g}"/>
+       <text x="${cx}" y="${cy}" dy=".36em" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="400"
+         font-size="${(R * .6).toFixed(1)}" fill="#e6d9b8" fill-opacity=".82" letter-spacing="${(R * .03).toFixed(2)}">${esc(initials(p))}</text>`;
+  return `<clipPath id="${id}"><circle cx="${cx}" cy="${cy}" r="${R}"/></clipPath>
+    <g clip-path="url(#${id})">${inner}</g>
+    <circle class="pt-ring" cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="rgba(245,196,81,.75)" stroke-width="${1.6 * g}"/>`;
+}
+// A standalone <svg> for HTML contexts (panel, gallery)
+function portraitSVG(p, R, label) {
+  const pad = Math.round(R * .08) + 2, S = 2 * (R + pad);
+  return `<svg class="pt${portrait(p) ? " has-photo" : ""}" data-pid="${p.id}" data-r="${R}" viewBox="0 0 ${S} ${S}" width="${S}" height="${S}"
+    style="width:${S}px;height:${S}px" role="img" aria-label="${esc(label || p.name)}">${portraitMarkup(p, S / 2, S / 2, R)}</svg>`;
+}
 const hidden = document.createElementNS(NS, "svg");
 hidden.setAttribute("width", 0); hidden.setAttribute("height", 0);
 hidden.setAttribute("aria-hidden", "true");
 hidden.style.position = "absolute";
-hidden.innerHTML = `<defs>
-  <filter id="woc-gray" color-interpolation-filters="sRGB">
-    <feColorMatrix type="saturate" values="0"/>
-    <feComponentTransfer>
-      <feFuncR type="linear" slope="1.12" intercept="0.04"/><feFuncG type="linear" slope="1.12" intercept="0.04"/><feFuncB type="linear" slope="1.12" intercept="0.04"/>
-    </feComponentTransfer>
-  </filter>
-  ${ANGLES.map((a, i) => `<linearGradient id="woc-spec-${i}" gradientTransform="rotate(${a} .5 .5)">
-    ${SPECTRUM.map((c, k) => `<stop offset="${(k / (SPECTRUM.length - 1)).toFixed(2)}" stop-color="${c}"/>`).join("")}
-  </linearGradient>`).join("")}</defs>`;
+hidden.innerHTML = `<defs><radialGradient id="woc-medal" cx="38%" cy="32%" r="75%">
+  <stop offset="0" stop-color="#3a2d58"/><stop offset=".6" stop-color="#231a3b"/><stop offset="1" stop-color="#150e26"/></radialGradient></defs>`;
 document.body.appendChild(hidden);
 
-/* ---------- the spectrum portrait ---------- */
-// One markup function for the map, the panel and the gallery.
-// Returns SVG children centred on (cx, cy) with portrait radius R.
-function seedOf(p) { let h = 7; for (const c of p.id) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; }
-let UID = 0;
-function portraitMarkup(p, cx, cy, R, opts = {}) {
-  const seed = seedOf(p), k = seed % ANGLES.length, rot = seed % 360, hue = hueOf(p);
-  const id = "pc" + (++UID);
-  const pic = portrait(p);
-  const arc = (r, w, col, parts, extra = "") => {
-    const C = 2 * Math.PI * r;
-    return `<circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}" fill="none" stroke="${col}" stroke-width="${w}"
-      stroke-dasharray="${parts.map(f => (f * C).toFixed(1)).join(" ")}" transform="rotate(${rot} ${cx} ${cy})" ${extra}/>`;
-  };
-  const g = R / 40;   // ring widths scale with the portrait
-  const rings = opts.rings === false ? "" :
-    arc(R + 7 * g, 7 * g, `hsl(${hue} 75% 80% / .85)`, [.34, .06, .22, .38], `class="spx-ring"`) +
-    arc(R + 14 * g, 1.6 * g, "rgba(255,255,255,.85)", [.18, .1, .44, .28]) +
-    arc(R + 19 * g, 3.4 * g, `hsl(${hue} 40% 55% / .9)`, [.12, .88]) +
-    arc(R + 19 * g, 1.2 * g, "rgba(255,255,255,.45)", [0, .2, .5, .3]);
-  let inner;
-  if (pic) {
-    inner = `<g class="spx-photo" style="isolation:isolate">
-      <circle cx="${cx}" cy="${cy}" r="${R}" fill="#f4efe6"/>
-      <image href="${esc(pic.file)}" x="${cx - R}" y="${cy - R}" width="${2 * R}" height="${2 * R}" preserveAspectRatio="xMidYMin slice"/>
-      <circle class="spx-tint" cx="${cx}" cy="${cy}" r="${R}" fill="url(#woc-spec-${k})" style="mix-blend-mode:color"/></g>`;
-  } else {
-    inner = `<circle cx="${cx}" cy="${cy}" r="${R}" fill="#f4efe6"/>
-      <text x="${cx}" y="${cy}" dy=".35em" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="600"
-        font-size="${(R * .78).toFixed(1)}" fill="url(#woc-spec-${k})" letter-spacing="${(R * .02).toFixed(2)}">${esc(initials(p))}</text>`;
+// Look for portraits/<id>.jpg for everyone without a credits entry, and
+// swap the photo in wherever that person is already drawn.
+function probePhotos() {
+  for (const p of PEOPLE) {
+    if (PORTRAITS[p.id] && PORTRAITS[p.id].file) continue;
+    const img = new Image();
+    img.onload = () => { FOUND[p.id] = { file: `portraits/${p.id}.jpg` }; refreshPortrait(p); };
+    img.src = `portraits/${p.id}.jpg`;
   }
-  return `${rings}<clipPath id="${id}"><circle cx="${cx}" cy="${cy}" r="${R}"/></clipPath>
-    <g clip-path="url(#${id})">${inner}</g>
-    <circle class="spx-edge" cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="${1.2 * g}"/>`;
 }
-// A standalone <svg> for HTML contexts (panel, gallery)
-function portraitSVG(p, R, label) {
-  const pad = Math.round(R * .55), S = 2 * (R + pad);
-  return `<svg class="spx${portrait(p) ? " has-photo" : ""}" viewBox="0 0 ${S} ${S}" width="${S}" height="${S}"
-    style="width:${S}px;height:${S}px" role="img" aria-label="${esc(label || p.name)}">${portraitMarkup(p, S / 2, S / 2, R)}</svg>`;
+function refreshPortrait(p) {
+  if (p._holder) p._holder.innerHTML = portraitMarkup(p, p._x, p._y, TR);
+  document.querySelectorAll(`svg.pt[data-pid="${p.id}"]`).forEach(svg => {
+    svg.outerHTML = portraitSVG(p, +svg.dataset.r, svg.getAttribute("aria-label"));
+  });
+  const cap = document.querySelector(`.pio-hero[data-pid="${p.id}"] figcaption`);
+  if (cap) cap.outerHTML = creditHTML(p);
 }
 
 /* ---------- the constellation ---------- */
@@ -129,12 +117,14 @@ ONMAP.forEach((p, i) => {
   svgEl("title", {}, g).textContent = `${p.name} · ${dates(p)}\n${p.epitaph}`;
   const holder = svgEl("g", {}, g);
   holder.innerHTML = portraitMarkup(p, x, y, TR);
+  p._holder = holder; p._x = x; p._y = y;
   svgEl("text", { x, y:y + TR + 30, class:"plabel" }, g).textContent = shortName(p);
   g.addEventListener("click", () => openPioneer(p.id));
   g.addEventListener("keydown", e => { if (e.key === "Enter") openPioneer(p.id); });
   p._el = g;
 });
 setYear(S.year);   // sync the new constellation with the time scrubber
+probePhotos();
 
 /* ---------- biography panel ---------- */
 let pulseT = null;
@@ -145,10 +135,11 @@ function lightFields(p, on) {
 function portraitHTML(p, R) { return portraitSVG(p, R, "Portrait of " + p.name); }
 function creditHTML(p) {
   const pic = portrait(p);
-  if (!pic) return `<figcaption>No free-licence photo added yet</figcaption>`;
+  if (!pic) return `<figcaption>Photo not added yet</figcaption>`;
+  if (!pic.artist && !pic.license) return `<figcaption>Photo credit not recorded yet (portraits/credits.js)</figcaption>`;
   const lic = pic.licenseUrl ? `<a href="${esc(pic.licenseUrl)}" target="_blank" rel="noopener">${esc(pic.license)}</a>` : esc(pic.license || "");
   const src = pic.source ? ` · <a href="${esc(pic.source)}" target="_blank" rel="noopener">source</a>` : "";
-  return `<figcaption>Photo: ${esc(pic.artist || "unknown")} · ${lic}${src} · hover for original colours</figcaption>`;
+  return `<figcaption>Photo: ${esc(pic.artist || "unknown")} · ${lic}${src}</figcaption>`;
 }
 
 function openPioneer(id) {
@@ -170,7 +161,7 @@ function openPioneer(id) {
   const status = p.died == null ? `<span class="pio-alive">living</span>` : "";
   $("panel-body").innerHTML = `
     <article class="pio">
-      <figure class="pio-hero">${portraitHTML(p, 76)}${creditHTML(p)}</figure>
+      <figure class="pio-hero" data-pid="${p.id}">${portraitHTML(p, 76)}${creditHTML(p)}</figure>
       <div class="meta">Pioneer · ${esc(dates(p))} ${status}</div>
       <h2>${esc(p.name)}</h2>
       <p class="pio-role">${esc(p.role)}</p>
@@ -305,10 +296,10 @@ const css = `
 .pioneer { transform-box: fill-box; }
 .pioneer .plabel { font-family: "IBM Plex Mono", monospace; font-size: 15px; font-weight: 500; fill: #ffe9a8; text-anchor: middle;
   paint-order: stroke; stroke: rgba(0,0,0,.75); stroke-width: 3px; letter-spacing: .02em; }
-.pioneer .spx-ring { transition: stroke-width .2s; }
-.pioneer:hover .spx-edge, .pioneer:focus-visible .spx-edge { stroke: #f5c451; stroke-width: 3; }
+.pioneer .pt-ring { transition: stroke .2s, stroke-width .2s; }
+.pioneer:hover .pt-ring, .pioneer:focus-visible .pt-ring { stroke: #ffe39a; stroke-width: 2.6; }
 .pioneer:hover .plabel { fill: #fff; }
-.pioneer { filter: drop-shadow(0 0 10px rgba(0,0,0,.55)); }
+.pioneer { filter: drop-shadow(0 4px 10px rgba(0,0,0,.55)); }
 body.zoomed .pioneer { opacity: .08 !important; pointer-events: none !important; }
 body.topic-focus .pioneer { opacity: 0 !important; }
 .field.pio-lit circle.core { stroke: var(--gold); stroke-width: 3; }
@@ -320,11 +311,8 @@ body.topic-focus .pioneer { opacity: 0 !important; }
 .pio .meta { margin-bottom: .2rem !important; }
 .pio-alive { color: #9fe8c0; border: 1px solid rgba(159,232,192,.5); border-radius: 999px; padding: 0 .45rem; margin-left: .3rem; }
 .pio-hero { margin: 0 0 1rem; display: flex; flex-direction: column; align-items: center; gap: .45rem; }
-.spx { display: block; overflow: visible; }
-.spx .spx-photo image { filter: url(#woc-gray); }
-.spx.has-photo:hover .spx-photo image { filter: none; }
-.spx.has-photo:hover .spx-tint { opacity: 0; }
-.spx-tint { transition: opacity .25s; }
+.pt { display: block; overflow: visible; }
+.pio-hero .pt { filter: drop-shadow(0 6px 22px rgba(0,0,0,.5)); }
 .pio-hero figcaption { font-family: "IBM Plex Mono", monospace; font-size: .62rem; color: var(--dim); text-align: center; }
 .pio-hero figcaption a { color: var(--dim); }
 .pio-role { font-size: .88rem; color: var(--dim); margin-bottom: .8rem; }
@@ -391,7 +379,7 @@ body.topic-focus .pioneer { opacity: 0 !important; }
 .pg-card:hover, .pg-card:focus-visible { border-color: var(--gold); background: rgba(245,196,81,.07); outline: none; }
 .pg-card.later { opacity: .55; }
 .pg-pic { width: 68px; height: 68px; display: grid; place-items: center; }
-.pg-pic .spx { width: 68px !important; height: 68px !important; }
+.pg-pic .pt { width: 68px !important; height: 68px !important; }
 .pg-txt { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
 .pg-txt b { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 1rem; }
 .pg-dates { font-family: "IBM Plex Mono", monospace; font-size: .66rem; color: var(--gold); }

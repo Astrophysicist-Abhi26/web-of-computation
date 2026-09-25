@@ -74,13 +74,13 @@ prefer reduced motion get the final layout without animation.
 - **Gallery**: the **▦ pioneer gallery** button lists everyone grouped by era,
   with search and filters (by domain, or living only).
 - **Portraits**: 12 featured pioneers sit in one row of large portraits under
-  the title; all 65 are in the gallery. Every portrait gets one "spectrum"
-  treatment: the photo in black and white under a rainbow tint, framed by
-  ring arcs in the person's domain colour. Until a photo is added, the same
-  frame shows the person's initials. Add a freely licensed photo in
-  `portraits/` (see `portraits/README.md`) and it appears automatically.
-  `tools/fetch_portraits.py` can fetch licensed photos from Wikimedia Commons
-  and write the credits for you. To change who is on the map, edit
+  the title; all 65 are in the gallery. Photos are shown in their natural
+  colours in a thin gold ring; anyone without a photo gets a quiet dark
+  medallion with their initials. To add a photo, save it as
+  `portraits/<id>.jpg` (for example `portraits/hassabis.jpg`) and it appears
+  everywhere automatically. `tools/add_portrait.py` crops and files a photo
+  for you and records its credit; `tools/fetch_portraits.py` fetches freely
+  licensed photos from Wikimedia Commons. To change who is on the map, edit
   `FEATURED` in `pioneers.js`.
 - To add a person: append an entry to `PEOPLE` in `pioneers-data.js` (the
   header comment lists the fields). Dates marked "c." are approximate.

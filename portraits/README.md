@@ -1,7 +1,12 @@
 # Pioneer portraits
 
-Every pioneer shows a circular portrait with ring arcs around it. Until a
-photo is added, the frame shows the person's initials.
+Every pioneer shows a circular portrait in a thin gold ring. Until a photo
+is added, a dark medallion shows the person's initials.
+
+**The quickest way:** save a photo as `portraits/<id>.jpg` (the `id` from
+`pioneers-data.js`, e.g. `hassabis.jpg`). The site finds it on its own.
+`python3 tools/add_portrait.py hassabis photo.jpg --artist "…" --license "…" --source "…"`
+crops it square, saves it in the right place and records the credit.
 
 ## Adding a portrait by hand
 
@@ -39,14 +44,10 @@ It needs internet access to `en.wikipedia.org`, `commons.wikimedia.org`
 and `upload.wikimedia.org`. Check the results by eye before committing:
 the lead image is usually, but not always, a good portrait.
 
-## Why the rainbow look?
+## How photos are shown
 
-Every photo is shown in black and white under a rainbow tint (the
-`#woc-gray` filter and `woc-spec-*` gradients in `pioneers.js`), inside
-ring arcs in the person's domain colour. Photos from different decades and
-cameras then read as one set. The effect is applied in the browser; the
-files stay unmodified. Hover a portrait in the biography panel or gallery to
-see the original.
+Photos are shown as they are, in natural colour, cropped to a circle from
+the top-centre of the image (keep the face in the upper part of the frame).
 
 ## Licences to avoid
 
