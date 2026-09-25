@@ -1,21 +1,20 @@
 // ============================================================
 // THE WEB OF COMPUTATION — portrait credits
-// One entry per pioneer id (see pioneers-data.js). Put the image
-// at portraits/<id>.jpg (square, about 320×320, face near the top
-// third). Anyone without an entry gets a monogram instead.
+// One entry per pioneer id (see pioneers-data.js). The photo lives at
+// portraits/<id>.jpg; tools/add_portrait.py crops it and writes the
+// entry for you. Every entry is shown under the portrait and in the
+// gallery's "Photo credits" list.
 //
-// Only use images you are allowed to publish: public domain, CC0,
-// CC BY or CC BY-SA. Record the credit exactly as the source asks.
-// tools/fetch_portraits.py fills this file from Wikimedia Commons.
+//   file        portraits/<id>.jpg
+//   artist      the photographer, as the source asks to be credited
+//   license     e.g. "CC BY-SA 4.0", "Public domain", "Used with permission"
+//   licenseUrl  link to the licence text (optional)
+//   source      where the photo came from (page URL)
+//   note        anything else, e.g. "Permission granted by email, 2026"
 //
-// Example:
-//   turing: {
-//     file: "portraits/turing.jpg",
-//     artist: "Unknown photographer",
-//     license: "Public domain",
-//     licenseUrl: "",
-//     source: "https://commons.wikimedia.org/wiki/File:Alan_Turing_Aged_16.jpg"
-//   },
+// A credit line is not permission. See portraits/README.md for the
+// ways to get photos you are allowed to publish.
 // ============================================================
 window.PORTRAITS = {
+  hassabis: {"file": "portraits/hassabis.jpg", "artist": "", "license": "", "licenseUrl": "", "source": "", "note": "Photo supplied by the site author; copyright remains with the original photographer (source not recorded)"},
 };

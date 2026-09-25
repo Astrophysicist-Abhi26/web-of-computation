@@ -284,13 +284,17 @@ function lightFields(p, on) {
   for (const id of p.fields) { const r = fieldById(id); if (r) r.f._el.classList.toggle("pio-lit", on); }
 }
 function portraitHTML(p, R) { return portraitSVG(p, R, "Portrait of " + p.name); }
+// One credit line per photo: who took it, the licence or permission, and where it came from.
+function creditText(pic) {
+  const lic = pic.licenseUrl ? `<a href="${esc(pic.licenseUrl)}" target="_blank" rel="noopener">${esc(pic.license)}</a>` : esc(pic.license || "");
+  const src = pic.source ? `<a href="${esc(pic.source)}" target="_blank" rel="noopener">source</a>` : "";
+  return [pic.artist ? "Photo: " + esc(pic.artist) : "", lic, pic.note ? esc(pic.note) : "", src].filter(Boolean).join(" · ");
+}
 function creditHTML(p) {
   const pic = portrait(p);
   if (!pic) return `<figcaption>Photo not added yet</figcaption>`;
-  if (!pic.artist && !pic.license) return `<figcaption>Photo credit not recorded yet (portraits/credits.js)</figcaption>`;
-  const lic = pic.licenseUrl ? `<a href="${esc(pic.licenseUrl)}" target="_blank" rel="noopener">${esc(pic.license)}</a>` : esc(pic.license || "");
-  const src = pic.source ? ` · <a href="${esc(pic.source)}" target="_blank" rel="noopener">source</a>` : "";
-  return `<figcaption>Photo: ${esc(pic.artist || "unknown")} · ${lic}${src}</figcaption>`;
+  if (!pic.artist && !pic.license && !pic.note) return `<figcaption>Photo credit not recorded yet (portraits/credits.js)</figcaption>`;
+  return `<figcaption>${creditText(pic)}</figcaption>`;
 }
 
 function openPioneer(id) {
@@ -356,7 +360,7 @@ gal.innerHTML = `
     <div class="pg-head">
       <div>
         <h2 id="pg-title">Pioneers of Computation</h2>
-        <p class="pg-sub"><span id="pg-count"></span> people, in order of the work that put them on the map. Those marked ✦ also appear in the sky.</p>
+        <p class="pg-sub"><span id="pg-count"></span> people, in order of the work that put them on the map. Those marked ✦ also appear in the sky. <a href="#pg-credits" class="pg-credlink">Photo credits ↓</a></p>
       </div>
       <button class="pg-close" aria-label="Close gallery">✕</button>
     </div>
@@ -380,6 +384,9 @@ pgFilters.querySelectorAll("button").forEach(b => b.addEventListener("click", ()
   renderGallery();
 }));
 pgSearch.addEventListener("input", renderGallery);
+gal.querySelector(".pg-credlink").addEventListener("click", e => {
+  e.preventDefault(); const c = gal.querySelector("#pg-credits"); if (c) c.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth" });
+});
 
 function matches(p, q) {
   if (filt === "living" && p.died != null) return false;
@@ -406,15 +413,25 @@ function renderGallery() {
         <span class="pg-pic">${portraitHTML(p, 32)}</span>
         <span class="pg-txt">
           <b>${esc(p.name)}${FEATURED.includes(p.id) ? ' <span class="pg-star" title="In the sky">✦</span>' : ""}</b>
-          <span class="pg-dates">${esc(dates(p))}${p.died == null ? " · living" : ""}</span>
+          <span class="pg-dates">${esc([dates(p), p.died == null ? "living" : ""].filter(Boolean).join(" · "))}</span>
           <span class="pg-ep">${esc(p.epitaph)}</span>
           <span class="pg-dots"><span class="pg-y">${p.y}</span>${dots}</span>
         </span>
       </button>`;
   }
   html += "</div></section>";
-  pgBody.innerHTML = html;
+  pgBody.innerHTML = html + creditsSection();
   pgBody.querySelectorAll(".pg-card").forEach(c => c.addEventListener("click", () => { closeGallery(); openPioneer(c.dataset.id); }));
+}
+// Every photo in use, with its credit: the site's image-credits page.
+function creditsSection() {
+  const withPic = CHRONO.filter(p => portrait(p));
+  const rows = withPic.map(p => { const pic = portrait(p);
+    return `<li><b>${esc(p.name)}</b> — ${pic.artist || pic.license || pic.note ? creditText(pic) : "credit not recorded yet"}</li>`; }).join("");
+  return `<section class="pg-credits" id="pg-credits"><h3>Photo credits</h3>
+    <p>${withPic.length ? `${withPic.length} of ${PEOPLE.length} pioneers have a photo. Each one is listed with its photographer, its licence or permission, and its source.`
+      : "No photos have been added yet. Every photo added to the site will be listed here with its photographer, its licence or permission, and its source."}
+      Photos stay the property of their owners.</p>${rows ? `<ul>${rows}</ul>` : ""}</section>`;
 }
 let lastFocus = null;
 function openGallery() {
@@ -553,6 +570,7 @@ body[data-pio-layout="ribbon"] #timebar { padding-top: 5.4rem; }
 .pg-head { display: flex; justify-content: space-between; gap: 1rem; padding: 1.3rem 1.5rem .6rem; }
 .pg-head h2 { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 1.7rem; }
 .pg-sub { font-family: "IBM Plex Mono", monospace; font-size: .72rem; color: var(--dim); margin-top: .2rem; }
+.pg-credlink { color: var(--gold); }
 .pg-close { flex: none; background: none; border: 1px solid rgba(255,255,255,.2); color: var(--ink); width: 2.2rem; height: 2.2rem;
   border-radius: 50%; cursor: pointer; font-size: 1rem; }
 .pg-close:hover, .pg-close:focus-visible { border-color: var(--gold); color: var(--gold); outline: none; }
@@ -589,6 +607,11 @@ body[data-pio-layout="ribbon"] #timebar { padding-top: 5.4rem; }
 .pg-dots i { width: 7px; height: 7px; border-radius: 50%; background: hsl(var(--h) 80% 62%); }
 .pg-y { font-family: "IBM Plex Mono", monospace; font-size: .62rem; color: var(--dim); margin-right: .2rem; }
 .pg-empty { color: var(--dim); padding: 2rem 0; }
+.pg-credits { margin-top: 1.6rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,.1); font-size: .82rem; color: var(--dim); line-height: 1.55; }
+.pg-credits h3 { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 1rem; color: var(--ink); margin-bottom: .35rem; }
+.pg-credits ul { margin: .5rem 0 0; padding-left: 1.1rem; display: grid; gap: .25rem; }
+.pg-credits b { color: var(--ink); font-weight: 600; }
+.pg-credits a { color: #7fe3d6; }
 .pg-star { color: var(--gold); font-size: .8rem; }
 body.pg-open { overflow: hidden; }
 @media (max-width: 700px) {

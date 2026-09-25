@@ -49,6 +49,52 @@ the lead image is usually, but not always, a good portrait.
 Photos are shown as they are, in natural colour, cropped to a circle from
 the top-centre of the image (keep the face in the upper part of the frame).
 
+## Using photos you are allowed to publish
+
+A credit or caption tells readers where a photo came from, but it does not
+give you the right to publish it. Press, agency and magazine photos (TIME,
+Getty, Reuters, news sites, event photos) belong to their photographers or
+publishers. On a public GitHub Pages site the owner can send a DMCA notice
+and GitHub will take the file, or the repository, down. The legitimate ways
+to get portraits:
+
+1. **Freely licensed photos (easiest).** Most pioneers have a photo on
+   Wikimedia Commons under CC BY, CC BY-SA or public domain. You may use
+   them if you credit them as the licence asks, which `credits.js` does.
+   `tools/fetch_portraits.py` fetches them all automatically.
+2. **Public-domain photos.** Photos published in the US before 1930, and
+   photos taken by US federal employees on duty (for example US Navy photos
+   of Grace Hopper) are public domain.
+3. **Official press photos.** Universities, labs and companies often offer
+   headshots in a press or media kit. Read the terms: many allow editorial
+   use with a credit.
+4. **Ask for permission.** Researchers and their press offices often say yes
+   to an educational site. Write to the person, their office, or the
+   photographer (template below). Keep the reply, and record it in
+   `credits.js` as `license: "Used with permission"`.
+5. **Buy a licence.** Agency photos (Getty, TIME) can be licensed for web use.
+6. **Your own photos.** A photo you took yourself, say at a public talk, is
+   yours to publish.
+
+### Permission request template
+
+> Subject: Permission to use a portrait on an educational website
+>
+> Dear …,
+>
+> I am building *The Web of Computation*, a free, non-commercial
+> interactive history of computer science and AI
+> ([link to the site]). I would
+> like to include a small portrait of … beside a short biography of their
+> work.
+>
+> May I use the photo at [link], shown about 150 pixels wide with the
+> credit "Photo: [photographer]"? If you prefer a different photo or
+> credit, I will use that instead.
+>
+> Thank you,
+> …
+
 ## Licences to avoid
 
 Press, agency and magazine photos (for example TIME portraits or Nobel
