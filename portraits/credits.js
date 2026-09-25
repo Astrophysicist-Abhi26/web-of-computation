@@ -31,4 +31,5 @@ window.PORTRAITS = {
   vonneumann: {"file": "portraits/vonneumann.jpg", "artist": "", "license": "", "licenseUrl": "", "source": "", "note": "Photo supplied by the site author; copyright remains with the original photographer or owner (source not recorded)"},
   minsky: {"file": "portraits/minsky.jpg", "artist": "", "license": "", "licenseUrl": "", "source": "", "note": "Photo supplied by the site author; copyright remains with the original photographer or owner (source not recorded)"},
   lecun: {"file": "portraits/lecun.jpg", "artist": "", "license": "", "licenseUrl": "", "source": "", "note": "Photo supplied by the site author; copyright remains with the original photographer or owner (source not recorded)"},
+  hopper: {"file": "portraits/hopper.jpg", "artist": "", "license": "Public domain (U.S. government work)", "licenseUrl": "", "source": "", "note": "Official U.S. Navy portrait of Commodore Grace M. Hopper"},
 };
