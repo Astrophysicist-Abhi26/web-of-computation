@@ -237,7 +237,9 @@ $("panel-close").addEventListener("click", () => {
 });
 
 // ---------- semantic zoom ----------
-const HOME = "0 -190 1600 1190";   // room at the top for the pioneer portraits
+let HOME = "0 -190 1600 1190";   // room at the top for the pioneer portraits
+// pioneers.js changes the home view to suit the chosen pioneer layout
+function setHome(v) { HOME = v; if (!S.zoomed) animateViewBox(HOME); }
 function domainBox(d) {
   // shift the domain left of centre so the side panel doesn't cover its fields
   const w = 620, h = 420, shift = innerWidth > 700 ? w * 0.14 : 0;

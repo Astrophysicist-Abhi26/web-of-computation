@@ -94,7 +94,7 @@ function probePhotos() {
   }
 }
 function refreshPortrait(p) {
-  if (p._holder) p._holder.innerHTML = portraitMarkup(p, p._x, p._y, TR);
+  if (p._holder) p._holder.innerHTML = portraitMarkup(p, p._x, p._y, p._R);
   document.querySelectorAll(`svg.pt[data-pid="${p.id}"]`).forEach(svg => {
     svg.outerHTML = portraitSVG(p, +svg.dataset.r, svg.getAttribute("aria-label"));
   });
@@ -102,29 +102,180 @@ function refreshPortrait(p) {
   if (cap) cap.outerHTML = creditHTML(p);
 }
 
-/* ---------- the constellation ---------- */
-// Twelve featured pioneers sit on the map in one row under the title, left
-// to right in order of their defining year, large enough to recognise.
-// Everyone (all of PEOPLE) is in the gallery.
-const FEATURED = ["babbage","lovelace","turing","vonneumann","shannon","hopper","mccarthy",
+/* ---------- arrangements on the map ---------- */
+// Six ways to show pioneers on the map, switchable live from the
+// "✦ pioneer layout" picker (remembered in this browser). Everyone is
+// always in the gallery; FEATURED is whoever the current layout shows.
+const SIXTEEN = ["babbage","lovelace","boole","turing","vonneumann","shannon","hopper","mccarthy",
+  "minsky","rosenblatt","hinton","lecun","feifeili","sutskever","hassabis","amodei"];
+const TWELVE = ["babbage","lovelace","turing","vonneumann","shannon","hopper","mccarthy",
   "hinton","feifeili","sutskever","hassabis","amodei"];
-const ROW_Y = -20, X0 = 74, X1 = 1316, TR = 40;
-const ONMAP = CHRONO.filter(p => FEATURED.includes(p.id));
-ONMAP.forEach((p, i) => {
-  const x = X0 + i * (X1 - X0) / (ONMAP.length - 1);
-  const y = ROW_Y;
-  const g = svgEl("g", { class:"pioneer", tabindex:-1, role:"button", "aria-label":`${p.name}, ${dates(p)}` }, Lpeople);
+// who sits beside which domain, and which way the group faces (degrees, 0 = right)
+const HOMES = {
+  found: { ids:["boole","godel","turing"], dir:-150 },
+  hard:  { ids:["babbage","lovelace","vonneumann"], dir:-95 },
+  algo:  { ids:["dijkstra","knuth"], dir:-140 },
+  lang:  { ids:["hopper","ritchie"], dir:-150 },
+  info:  { ids:["shannon","diffie"], dir:-38 },
+  data:  { ids:["codd","feifeili"], dir:8 },
+  ai:    { ids:["mccarthy","minsky","hassabis"], dir:200 },
+  ml:    { ids:["rosenblatt","hinton","lecun","sutskever","amodei"], dir:-40 },
+};
+// real links between people, drawn in the constellation layout
+const LINKS = [
+  ["babbage","lovelace","Worked together on the Analytical Engine (1840s)"],
+  ["boole","shannon","Shannon's 1937 thesis turned Boole's algebra into circuits"],
+  ["turing","vonneumann","Turing studied at Princeton, where von Neumann offered him a post (1938)"],
+  ["turing","shannon","Met at Bell Labs in 1943 and talked about thinking machines"],
+  ["mccarthy","minsky","Founded the MIT AI Project together (1959)"],
+  ["minsky","rosenblatt","Rivals: symbolic AI against the perceptron", "rival"],
+  ["hinton","lecun","LeCun was a postdoc in Hinton's lab (1987–88)"],
+  ["hinton","sutskever","Sutskever did his PhD with Hinton; together they built AlexNet (2012)"],
+  ["feifeili","sutskever","AlexNet was trained on Li's ImageNet"],
+  ["sutskever","amodei","Colleagues at OpenAI"],
+];
+const LAYOUTS = {
+  row:    { name:"Row of portraits",     home:"0 -190 1600 1190", people:TWELVE,  hint:"12 large portraits under the title, oldest on the left." },
+  sky:    { name:"Constellation",        home:"0 -190 1600 1190", people:SIXTEEN, hint:"16 people as stars across the top of the sky, joined by real links: teachers, collaborators, rivals (red). Hover a line to read it." },
+  home:   { name:"Beside their domain",  home:"0 -90 1600 1090",  people:null,    hint:"22 people, each next to the domain they shaped." },
+  ribbon: { name:"On the timeline",      home:"0 -90 1600 1090",  people:SIXTEEN, hint:"16 portraits above the time scrubber at their year. They light up as you scrub through history." },
+  rail:   { name:"Side wall",            home:"0 -90 1600 1090",  people:TWELVE,  hint:"A column of 12 portraits with names and dates on the right, like a museum wall." },
+  off:    { name:"Gallery only",         home:"0 -90 1600 1090",  people:[],      hint:"No one on the map; open ▦ pioneer gallery to see everyone." },
+};
+LAYOUTS.home.people = Object.values(HOMES).flatMap(h => h.ids);
+let LAYOUT = "row";
+try { LAYOUT = localStorage.getItem("woc-pioneer-layout") || "row"; } catch (e) {}
+if (!LAYOUTS[LAYOUT]) LAYOUT = "row";
+let FEATURED = [];
+
+const htmlLayer = document.createElement("div");
+htmlLayer.id = "pio-layer"; document.body.appendChild(htmlLayer);
+
+function clearLayout() {
+  Lpeople.innerHTML = ""; htmlLayer.innerHTML = ""; htmlLayer.className = "";
+  document.querySelectorAll(".pio-ribbon").forEach(n => n.remove());
+  for (const p of PEOPLE) { p._el = p._holder = null; }
+}
+// one clickable portrait in the SVG map
+function svgPerson(p, x, y, R, cls) {
+  const g = svgEl("g", { class:"pioneer" + (cls ? " " + cls : ""), tabindex:-1, role:"button", "aria-label":`${p.name}, ${dates(p)}` }, Lpeople);
   svgEl("title", {}, g).textContent = `${p.name} · ${dates(p)}\n${p.epitaph}`;
-  const holder = svgEl("g", {}, g);
-  holder.innerHTML = portraitMarkup(p, x, y, TR);
-  p._holder = holder; p._x = x; p._y = y;
-  svgEl("text", { x, y:y + TR + 30, class:"plabel" }, g).textContent = shortName(p);
+  const holder = svgEl("g", { class:"pt-hold" }, g);
+  holder.innerHTML = portraitMarkup(p, x, y, R);
+  Object.assign(p, { _holder:holder, _x:x, _y:y, _R:R, _el:g });
+  const t = svgEl("text", { x, y:y + R + Math.max(14, R * .6), class:"plabel" }, g);
+  t.textContent = shortName(p); t.style.fontSize = Math.max(11, Math.min(15, R * .42)) + "px";
+  g.style.transformOrigin = `${x}px ${y}px`;
   g.addEventListener("click", () => openPioneer(p.id));
   g.addEventListener("keydown", e => { if (e.key === "Enter") openPioneer(p.id); });
-  p._el = g;
-});
-setYear(S.year);   // sync the new constellation with the time scrubber
+  return g;
+}
+// one clickable portrait in an HTML layout
+function htmlPerson(p, R, withText) {
+  const b = document.createElement("button");
+  b.className = "pio-h"; b.type = "button"; b.dataset.pid = p.id;
+  b.title = `${p.name} · ${dates(p)}`;
+  b.innerHTML = portraitSVG(p, R, p.name) + (withText ? `<span class="pio-h-t"><b>${esc(p.name)}</b><i>${esc(dates(p))}</i></span>` : "");
+  b.addEventListener("click", () => openPioneer(p.id));
+  p._el = b;
+  return b;
+}
+const peopleOf = ids => ids.map(id => byId[id]).filter(Boolean).sort((a, b) => a.y - b.y);
+
+const BUILD = {
+  row() {
+    const list = peopleOf(TWELVE), X0 = 74, X1 = 1316;
+    list.forEach((p, i) => svgPerson(p, X0 + i * (X1 - X0) / (list.length - 1), -20, 40));
+  },
+  sky() {
+    const list = peopleOf(SIXTEEN), pos = {};
+    list.forEach((p, i) => {
+      const x = 80 + i * (1300 / (list.length - 1));
+      const y = -28 + 50 * Math.sin(i * 1.9 + .6) + 12 * Math.cos(i * 3.3);   // stays below the title band
+      pos[p.id] = [x, y];
+    });
+    const lines = svgEl("g", { class:"pio-links" }, Lpeople);
+    for (const [a, b, why, kind] of LINKS) {
+      if (!pos[a] || !pos[b]) continue;
+      const [x1, y1] = pos[a], [x2, y2] = pos[b], mx = (x1 + x2) / 2, my = Math.min(y1, y2) - 26 - Math.abs(x2 - x1) * .06;
+      const path = svgEl("path", { d:`M${x1} ${y1} Q${mx} ${my} ${x2} ${y2}`, class:"pio-link" + (kind ? " " + kind : "") }, lines);
+      svgEl("title", {}, path).textContent = why;
+      const hit = svgEl("path", { d:path.getAttribute("d"), class:"pio-link-hit" }, lines);
+      svgEl("title", {}, hit).textContent = why;
+    }
+    list.forEach(p => { const [x, y] = pos[p.id]; svgPerson(p, x, y, 25, "star"); });
+  },
+  home() {
+    const R = 22;
+    for (const d of DOMAINS) {
+      const h = HOMES[d.id]; if (!h) continue;
+      const list = peopleOf(h.ids), rad = d.r + 64, step = (2 * R + 34) / rad, a0 = h.dir * Math.PI / 180;
+      list.forEach((p, k) => {
+        const a = a0 + (k - (list.length - 1) / 2) * step;
+        svgPerson(p, d.x + rad * Math.cos(a), d.y + rad * Math.sin(a), R, "near");
+      });
+    }
+  },
+  ribbon() {
+    // one even row of portraits above the scrubber, each with a thin line down to its year
+    const wrap = document.querySelector("#timebar .slider-wrap"); if (!wrap) return;
+    const rib = document.createElement("div"); rib.className = "pio-ribbon"; wrap.appendChild(rib);
+    const list = peopleOf(SIXTEEN), W = wrap.clientWidth || 580, H = 74, n = list.length;
+    const slot = W / n, R = Math.max(11, Math.min(16, slot / 2 - 3));
+    let lines = "";
+    list.forEach((p, i) => {
+      const cx = slot * (i + .5), yx = (p.y - 1822) / (2026 - 1822) * W;
+      lines += `<path data-pid="${p.id}" d="M${cx.toFixed(1)} ${2 * R + 8} C${cx.toFixed(1)} ${H - 18} ${yx.toFixed(1)} ${H - 22} ${yx.toFixed(1)} ${H}"/>`;
+      const b = htmlPerson(p, R, false);
+      b.style.left = cx + "px";
+      b.insertAdjacentHTML("beforeend", `<span class="pio-rb-n">${esc(p.name)} · ${p.y}</span>`);
+      rib.appendChild(b);
+    });
+    rib.insertAdjacentHTML("afterbegin", `<svg class="pio-rb-lines" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:${H}px">${lines}</svg>`);
+    rib.style.height = H + "px";
+  },
+  rail() {
+    htmlLayer.className = "rail";
+    htmlLayer.innerHTML = `<div class="pio-rail-h">Pioneers <button type="button">all ${PEOPLE.length} ▸</button></div>`;
+    htmlLayer.querySelector("button").addEventListener("click", openGallery);
+    peopleOf(TWELVE).forEach(p => htmlLayer.appendChild(htmlPerson(p, 19, true)));
+  },
+  off() {},
+};
+function applyLayout(name, animate) {
+  LAYOUT = name; clearLayout();
+  const L = LAYOUTS[name];
+  FEATURED = L.people.slice();
+  BUILD[name]();
+  document.body.dataset.pioLayout = name;
+  if (window.setHome) setHome(L.home); 
+  setYear(S.year);   // dim anyone not born yet on the scrubber
+  const hint = document.getElementById("pio-pick-hint"); if (hint) hint.textContent = L.hint;
+}
+applyLayout(LAYOUT);
 probePhotos();
+addEventListener("resize", () => { if (LAYOUT === "ribbon") applyLayout("ribbon"); });
+
+// the picker, next to the crack-style picker
+{
+  const toggles = document.getElementById("toggles");
+  if (toggles) {
+    const lab = document.createElement("label");
+    lab.id = "pio-pick";
+    lab.innerHTML = `<span>✦ pioneer layout</span><select aria-label="How pioneers are arranged on the map">
+      ${Object.entries(LAYOUTS).map(([k, l], i) => `<option value="${k}">${String.fromCharCode(65 + i)} · ${l.name}</option>`).join("")}</select>
+      <small id="pio-pick-hint"></small>`;
+    const crack = document.getElementById("crack-pick");
+    toggles.insertBefore(lab, crack || null);
+    const sel = lab.querySelector("select"); sel.value = LAYOUT;
+    document.getElementById("pio-pick-hint").textContent = LAYOUTS[LAYOUT].hint;
+    sel.addEventListener("change", () => {
+      try { localStorage.setItem("woc-pioneer-layout", sel.value); } catch (e) {}
+      if (!S.people) document.getElementById("toggle-people").click();   // make sure they're visible
+      applyLayout(sel.value);
+    });
+  }
+}
 
 /* ---------- biography panel ---------- */
 let pulseT = null;
@@ -305,6 +456,56 @@ body.topic-focus .pioneer { opacity: 0 !important; }
 .field.pio-lit circle.core { stroke: var(--gold); stroke-width: 3; }
 .field.pio-pulse circle.core { animation: pioPulse 1s ease-in-out 3 !important; }
 @keyframes pioPulse { 0%,100% { filter: drop-shadow(0 0 4px #f5c451); } 50% { filter: drop-shadow(0 0 18px #f5c451) brightness(1.6); } }
+
+/* layouts */
+.pioneer.star .pt-hold, .pioneer.near .pt-hold { transition: transform .25s ease; transform-box: fill-box; transform-origin: center; }
+.pioneer.star:hover .pt-hold, .pioneer.near:hover .pt-hold, .pioneer.star:focus-visible .pt-hold { transform: scale(1.35); }
+.pioneer.star { filter: drop-shadow(0 0 12px rgba(255,226,150,.35)); }
+.pio-links { pointer-events: none; transition: opacity .5s; }
+body:not(.people) .pio-links, body.zoomed .pio-links, body.topic-focus .pio-links { opacity: 0; }
+.pio-link { fill: none; stroke: rgba(255,226,150,.38); stroke-width: 1.2; stroke-dasharray: 3 5; }
+.pio-link.rival { stroke: rgba(255,120,100,.55); }
+.pio-link-hit { fill: none; stroke: transparent; stroke-width: 12; pointer-events: stroke; cursor: help; }
+body:not(.people) .pio-link-hit, body.zoomed .pio-link-hit { pointer-events: none; }
+.pioneer.unborn { opacity: .12 !important; }
+#pio-layer { display: none; }
+body.people #pio-layer.rail { display: flex; flex-direction: column; gap: .15rem; position: fixed; right: 1.2rem; top: 12.8rem; bottom: 1.2rem;
+  z-index: 14; width: 13rem; overflow-y: auto; padding: .55rem .5rem; background: var(--glass); border: 1px solid rgba(255,255,255,.1);
+  border-radius: 14px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); scrollbar-width: thin; }
+body.zoomed #pio-layer.rail, body:has(#panel.open) #pio-layer.rail { display: none; }
+.pio-rail-h { display: flex; justify-content: space-between; align-items: baseline; font: 500 .64rem "IBM Plex Mono", monospace;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--gold); padding: .1rem .35rem .35rem; }
+.pio-rail-h button { font: inherit; letter-spacing: .04em; text-transform: none; color: var(--dim); background: none; border: 0; cursor: pointer; }
+.pio-rail-h button:hover { color: var(--gold); }
+.pio-h { display: flex; align-items: center; gap: .55rem; background: none; border: 0; border-radius: 10px; padding: .2rem .35rem;
+  color: var(--ink); cursor: pointer; text-align: left; font: inherit; transition: background .15s, opacity .3s; }
+.pio-h:hover, .pio-h:focus-visible { background: rgba(245,196,81,.09); outline: none; }
+.pio-h .pt { flex: none; }
+.pio-h-t { display: flex; flex-direction: column; min-width: 0; }
+.pio-h-t b { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: .86rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pio-h-t i { font: normal .62rem "IBM Plex Mono", monospace; color: var(--gold); }
+.pio-h.unborn { opacity: .25; }
+.pio-ribbon { position: absolute; left: 0; right: 0; bottom: 100%; pointer-events: none; }
+body:not(.people) .pio-ribbon { display: none; }
+.pio-rb-lines { position: absolute; left: 0; top: 0; width: 100%; overflow: visible; }
+.pio-rb-lines path { fill: none; stroke: rgba(245,196,81,.4); stroke-width: 1; }
+.pio-ribbon .pio-h { position: absolute; top: 0; transform: translateX(-50%); padding: 0; border-radius: 50%; pointer-events: auto; }
+.pio-ribbon .pio-h:hover { background: none; z-index: 2; }
+.pio-ribbon .pio-h .pt { transition: transform .2s; transform-origin: 50% 100%; }
+.pio-ribbon .pio-h:hover .pt, .pio-ribbon .pio-h:focus-visible .pt { transform: scale(1.7); }
+body[data-pio-layout="ribbon"] #timebar { padding-top: 5.4rem; }
+.pio-rb-n { position: absolute; bottom: calc(100% + 30px); left: 50%; transform: translateX(-50%); white-space: nowrap; font: .62rem "IBM Plex Mono", monospace;
+  color: #fff; background: rgba(14,6,24,.92); border: 1px solid rgba(245,196,81,.4); border-radius: 6px; padding: .15rem .4rem; opacity: 0; transition: opacity .15s; pointer-events: none; }
+.pio-ribbon .pio-h:hover .pio-rb-n, .pio-ribbon .pio-h:focus-visible .pio-rb-n { opacity: 1; }
+.pio-ribbon .pio-h.unborn { opacity: .22; }
+#pio-pick { display: flex; flex-direction: column; gap: .25rem; font-family: "IBM Plex Mono", monospace; max-width: 13.5rem;
+  font-size: .64rem; letter-spacing: .06em; color: var(--dim); background: var(--glass);
+  border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: .45rem .7rem; }
+#pio-pick select { font-family: inherit; font-size: .7rem; color: var(--gold); background: transparent; border: 0; outline: none; cursor: pointer; padding: 0; }
+#pio-pick select option { background: #140c24; color: var(--ink); }
+#pio-pick small { font-size: .58rem; line-height: 1.45; letter-spacing: .02em; color: var(--dim); }
+#pio-pick:focus-within { border-color: var(--gold); }
+@media (max-width: 700px) { body.people #pio-layer.rail { display: none; } #pio-pick small { display: none; } }
 
 /* biography */
 .pio h2 { margin-top: .1rem; }

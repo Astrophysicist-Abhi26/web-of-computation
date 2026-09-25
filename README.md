@@ -73,8 +73,14 @@ prefer reduced motion get the final layout without animation.
   the previous/next pioneer in time.
 - **Gallery**: the **▦ pioneer gallery** button lists everyone grouped by era,
   with search and filters (by domain, or living only).
-- **Portraits**: 12 featured pioneers sit in one row of large portraits under
-  the title; all 65 are in the gallery. Photos are shown in their natural
+- **Six layouts on the map**, switchable live from the **✦ pioneer layout**
+  picker (bottom left, remembered per browser): A · row of 12 large
+  portraits, B · constellation of 16 joined by real links (teachers,
+  collaborators, rivals), C · 22 people beside the domain they shaped,
+  D · 16 portraits on the timeline that light up as you scrub, E · a side
+  wall of 12 with names and dates, F · gallery only. All 65 are always in
+  the gallery. Edit `LAYOUTS`, `HOMES` and `LINKS` in `pioneers.js`.
+- **Portraits**: Photos are shown in their natural
   colours in a thin gold ring; anyone without a photo gets a quiet dark
   medallion with their initials. To add a photo, save it as
   `portraits/<id>.jpg` (for example `portraits/hassabis.jpg`) and it appears
