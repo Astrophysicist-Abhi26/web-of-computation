@@ -196,3 +196,17 @@ inside the matching fields' panels:
    with drawing, glider gun, spaceships and random soups; and all 256
    elementary cellular automata with a clickable rule table (30, 90, 110,
    184 presets).
+9. **Wave 1: 39 labs promoted to full atoms** (`atoms3.js`). The most
+   hands-on labs from the field guides now also live in the ⚛ atoms window,
+   with full-screen support: sorting, edit distance, Dijkstra & A*, Monte
+   Carlo π, a LISP interpreter, garbage collection, the compiler pipeline,
+   Curry–Howard, Unix pipes, CPU scheduling, MapReduce, Huffman, Hamming,
+   SHA-256, SQL, transactions, Bayes, least squares, MCMC, Simpson's
+   paradox, ELIZA, minimax, an expert system, Prolog, the imitation game,
+   Nash equilibria, Axelrod's tournament, Hebbian memory, k-NN/k-means,
+   forests, convolution, embeddings, diffusion, a BPE tokenizer, next-token
+   text, RLHF, Q-learning, bandits and tic-tac-toe against MCTS. Each such
+   lab inside a guide has a "⤢ play full size" button. To promote another
+   lab, add a line to `PROMOTE` in `atoms3.js`.
+
+The atoms window has a domain filter row (with counts) above the tabs.
