@@ -1,11 +1,10 @@
 /* ============================================================
    THE WEB OF COMPUTATION — crack.js
    Domains crack open into their fields; fields crack open into
-   their topics. Five styles:
-     A walnut · B glass · C peel · D iris · E nova
-   In "mix" mode each domain (and each field) uses a different
-   style so all five can be compared live. A picker in the
-   bottom-left toggles forces one style everywhere.
+   their topics. Eight styles:
+     walnut · glass · peel · iris · nova · vortex · ripple · threads
+   Each of the eight domains opens with its own style, and the
+   fields take the eight styles in turn, so all are used evenly.
 
    Hooks (called from app.js):
      WOC_CRACK.domain(d)     after zoomTo(d)
@@ -278,9 +277,66 @@ nova: { tag:"E", name:"Supernova",
       });
       st.setKernel(st.kr * (1 + .25 * Math.sin(ms / 60) * (1 - seg(ms, 700, 1600))), seg(ms, 700, 1000));
     });
+  }},
+vortex: { tag:"F", name:"Vortex",
+  play(st) {
+    const { cx:CX, cy:CY, R, k, N, rng } = st, cols = ["#fff", st.hueCol(90, 78), st.hueCol(80, 64), "#ffe3a0"], parts = [];
+    for (let q = 0; q < 150; q++) { const i = q % N, n = st.nodes[i]; parts.push({ c:mk("circle", { cx:CX, cy:CY, r:(.7 + rng() * 1.6) * k, fill:cols[q % 4], opacity:0 }, st.Lfx2), i, u:rng(), D:Math.hypot(n.tx - CX, n.ty - CY), j:polar(rng() * 10 * k, rng() * 6.283, 0, 0) }); }
+    const core = mk("circle", { cx:CX, cy:CY, r:R * .3, fill:st.hueCol(85, 70), opacity:0, filter:st.u("glow") }, st.Lfx1);
+    return st.run(2000 + 40 * N, ms => {
+      const q = seg(ms, 0, 650);
+      st.Lorb.setAttribute("transform", about(CX, CY, { rot:420 * E.in(q), sx:1 - .9 * E.in(q) }));
+      st.Lorb.setAttribute("opacity", 1 - seg(ms, 450, 650));
+      core.setAttribute("opacity", seg(ms, 300, 600) * (1 - seg(ms, 1200, 1600))); core.setAttribute("r", f1(R * (.3 - .22 * seg(ms, 600, 1500))));
+      const p1 = E.out(seg(ms, 450, 1400));
+      parts.forEach(Q => {
+        const a = st.ang[Q.i] - (1 - p1) * Math.PI * 2.6 * (.6 + .4 * Q.u), r = Q.D * p1 * (.3 + .7 * Q.u);
+        const x1 = CX + r * Math.cos(a), y1 = CY + r * Math.sin(a), n = st.nodes[Q.i], p2 = E.io(seg(ms, 1250 + 200 * Q.u, 1800 + 200 * Q.u));
+        Q.c.setAttribute("cx", f1(lerp(x1, n.tx + Q.j[0], p2))); Q.c.setAttribute("cy", f1(lerp(y1, n.ty + Q.j[1], p2)));
+        Q.c.setAttribute("opacity", ms < 450 ? 0 : 1 - seg(p2, .75, 1));
+      });
+      st.nodes.forEach((n, i) => { const p = seg(ms, 1500 + 40 * i, 1950 + 40 * i); st.setNode(i, n.tx, n.ty, clamp(p * 2), .4 + .6 * E.back(p)); st.setSpoke(i, p); });
+      st.setKernel(st.kr, seg(ms, 1200, 1600));
+    });
+  }},
+
+ripple: { tag:"G", name:"Ripple",
+  play(st) {
+    const { cx:CX, cy:CY, R, k, N } = st;
+    const rings = [0, 1, 2, 3, 4].map(j => mk("circle", { cx:CX, cy:CY, r:R * .2, fill:"none", stroke:j % 2 ? st.hueCol(80, 72) : "#fff", "stroke-width":f1(2.4 * k), opacity:0 }, st.Lfx2));
+    const drop = mk("circle", { cx:CX, cy:CY - R * 1.6, r:6 * k, fill:"#fff", opacity:0, filter:st.u("glow") }, st.Lfx2);
+    const Dmax = Math.max(...st.nodes.map(n => Math.hypot(n.tx - CX, n.ty - CY))) * 1.15;
+    return st.run(2100 + 30 * N, ms => {
+      const fall = seg(ms, 0, 380); drop.setAttribute("cy", f1(CY - R * 1.6 * (1 - E.in(fall)))); drop.setAttribute("opacity", fall > 0 && fall < 1 ? 1 : 0);
+      const sq = seg(ms, 380, 700);
+      st.Lorb.setAttribute("transform", about(CX, CY, { sx:1 + .35 * E.out(sq), sy:1 - .85 * E.out(sq) }));
+      st.Lorb.setAttribute("opacity", 1 - seg(ms, 550, 760));
+      rings.forEach((c, j) => { const p = seg(ms, 420 + 170 * j, 1500 + 170 * j); c.setAttribute("r", f1(R * .2 + (Dmax - R * .2) * E.out(p))); c.setAttribute("opacity", p > 0 ? .85 * (1 - p) : 0); c.setAttribute("stroke-width", f1((2.6 * (1 - p) + .4) * k)); });
+      const front = R * .2 + (Dmax - R * .2) * E.out(seg(ms, 420, 1500));
+      st.nodes.forEach((n, i) => { const D = Math.hypot(n.tx - CX, n.ty - CY), hit = front >= D, t0 = 420 + 1080 * Math.min(1, D / Dmax), p = seg(ms, t0, t0 + 450), bob = Math.sin(p * Math.PI) * 8 * k;
+        st.setNode(i, n.tx, n.ty - bob, hit ? clamp(p * 2) : 0, .5 + .5 * E.back(p)); st.setSpoke(i, p); });
+      st.setKernel(st.kr, seg(ms, 700, 1100));
+    });
+  }},
+
+threads: { tag:"H", name:"Threads",
+  play(st) {
+    const { cx:CX, cy:CY, R, k, N, rng } = st, th = [];
+    st.nodes.forEach((n, i) => { for (let m = 0; m < 3; m++) { const mx = (CX + n.tx) / 2, my = (CY + n.ty) / 2, dx = n.ty - CY, dy = -(n.tx - CX), w = (rng() - .5) * .8;
+      const d = `M${f1(CX)},${f1(CY)} Q${f1(mx + dx * w)},${f1(my + dy * w)} ${f1(n.tx)},${f1(n.ty)}`, L = Math.hypot(n.tx - CX, n.ty - CY) * 1.35;
+      th.push({ el:mk("path", { d, fill:"none", stroke:m ? st.hueCol(85, 72) : "#ffe3a0", "stroke-width":f1((m ? 1 : 1.8) * k), filter:st.u("glow"), "stroke-dasharray":f1(L), "stroke-dashoffset":f1(L), opacity:0 }, st.Lfx1), L, i, m }); } });
+    const knot = mk("circle", { cx:CX, cy:CY, r:R * .5, fill:"none", stroke:"#ffe3a0", "stroke-width":f1(1.5 * k), "stroke-dasharray":f1(4 * k) + " " + f1(3 * k), opacity:0 }, st.Lfx1);
+    return st.run(2050 + 45 * N, ms => {
+      const u = seg(ms, 0, 700);
+      st.Lorb.setAttribute("transform", about(CX, CY, { rot:-90 * u, sx:1 - .55 * E.io(u) })); st.Lorb.setAttribute("opacity", 1 - seg(ms, 500, 900));
+      knot.setAttribute("opacity", seg(ms, 100, 400) * (1 - seg(ms, 900, 1200))); knot.setAttribute("transform", `rotate(${f1(360 * u)} ${f1(CX)} ${f1(CY)})`);
+      th.forEach(T => { const p = E.io(seg(ms, 400 + 55 * T.i + 90 * T.m, 1300 + 55 * T.i + 90 * T.m)); T.el.setAttribute("stroke-dashoffset", f1(T.L * (1 - p))); T.el.setAttribute("opacity", ms < 400 ? 0 : (1 - .75 * seg(ms, 1500, 2000)) * (T.m ? .7 : 1)); });
+      st.nodes.forEach((n, i) => { const p = seg(ms, 1150 + 55 * i, 1600 + 55 * i); st.setNode(i, n.tx, n.ty, clamp(p * 2), .5 + .5 * E.back(p)); st.setSpoke(i, p); });
+      st.setKernel(st.kr, seg(ms, 900, 1300));
+    });
   }}
 };
-const ORDER = ["walnut", "glass", "peel", "iris", "nova"];
+const ORDER = ["walnut", "glass", "peel", "iris", "nova", "vortex", "ripple", "threads"];
 
 /* ---------- one crack in progress ---------- */
 let uid = 0;
@@ -389,16 +445,17 @@ map.insertBefore(OV, Lfield);                       // above domains, below fiel
 const Ltopics = mk("g", { class:"topic-layer" });
 map.insertBefore(Ltopics, Lfield.nextSibling);      // above fields
 
-/* ---------- style choice: mix, or one forced style ---------- */
-let forced = "mix";
-try { forced = localStorage.getItem("woc-crack-style") || "mix"; } catch (e) {}
-if (forced !== "mix" && !STYLES[forced]) forced = "mix";
-const DOMAIN_STYLE = { found:"walnut", hard:"glass", algo:"peel", lang:"iris", info:"nova", data:"glass", ai:"iris", ml:"walnut" };
+/* ---------- style choice: one per domain, fields in rotation ---------- */
+let forced = "mix";   // every domain and field gets its own style; no stored override
+try { localStorage.removeItem("woc-crack-style"); } catch (e) {}
+// eight domains, eight different openings, matched to what each domain is about
+const DOMAIN_STYLE = { found:"threads", hard:"glass", algo:"vortex", lang:"iris", info:"ripple", data:"peel", ai:"walnut", ml:"nova" };
 function styleForDomain(d) { return forced !== "mix" ? forced : (DOMAIN_STYLE[d.id] || "walnut"); }
 function styleForField(f, d) {
   if (forced !== "mix") return forced;
-  const di = DOMAINS.indexOf(d), fi = (FIELDS[d.id] || []).indexOf(f);
-  return ORDER[(di + fi + 1) % ORDER.length];
+  // fields in map order take the eight styles in turn, so each style opens about one field in eight
+  const all = DOMAINS.flatMap(D => FIELDS[D.id] || []), g = all.indexOf(f);
+  return ORDER[(g < 0 ? 0 : g) % ORDER.length];
 }
 
 /* ---------- a small chip that names the style you just saw ---------- */
@@ -407,6 +464,7 @@ chip.id = "crack-chip"; chip.setAttribute("aria-live", "polite");
 document.body.appendChild(chip);
 let chipT = null;
 function showChip(key, what) {
+  return;   // the style name is an implementation detail; no chip on screen
   const s = STYLES[key];
   chip.innerHTML = `<b>${s.tag}</b> ${s.name}<span>${what}</span>`;
   chip.classList.add("on");
@@ -415,7 +473,7 @@ function showChip(key, what) {
 
 /* ---------- picker in the toggles column ---------- */
 const toggles = document.getElementById("toggles");
-if (toggles) {
+if (toggles && false) {   // retired: the styles are fixed per domain and rotate over fields
   const wrapEl = document.createElement("label");
   wrapEl.id = "crack-pick";
   wrapEl.innerHTML = `<span>✦ crack style</span><select id="crack-style" aria-label="Crack-open animation style">
