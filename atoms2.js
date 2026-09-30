@@ -31,7 +31,7 @@ function hidpi(c, w, h) { const d = Math.min(2, devicePixelRatio || 1); c.width 
    CSS
    ============================================================ */
 const CSS = `
-#atoms-box.wide { width: min(1060px, 96vw); }
+#atoms-box.wide { width: min(1180px, 96vw); }
 .a2 { --o: #f59e42; --b: #4f8cff; }
 .a2 .a2-sub { display: flex; gap: .35rem; flex-wrap: wrap; margin: .2rem 0 .8rem; }
 .a2 .a2-sub button, .a2 .a2-chip { font: 500 .68rem "IBM Plex Mono", monospace; color: var(--dim); background: rgba(255,255,255,.04);
@@ -121,6 +121,14 @@ const CSS = `
 .a2-life .eca-cell i.on { background: #f5c451; border-color: #f5c451; }
 .a2-life .eca-cell .res i { width: 10px; }
 .a2-life input[type=number] { width: 4.2rem; font: .75rem "IBM Plex Mono", monospace; color: var(--ink); background: #140c24; border: 1px solid rgba(255,255,255,.18); border-radius: 7px; padding: .3rem .4rem; }
+#atoms-full { position: absolute; top: .6rem; right: 3.9rem; width: 2.75rem; height: 2.75rem; min-width: 44px; min-height: 44px; border-radius: 50%; z-index: 5; cursor: pointer;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.3); color: var(--ink); font-size: 1.05rem; }
+#atoms-full:hover, #atoms-full:focus-visible { border-color: var(--gold); color: var(--gold); background: rgba(245,196,81,.15); }
+#atoms-box.full { width: 100vw !important; max-width: none; max-height: 100vh; height: 100vh; border-radius: 0; padding: 1rem 2.2rem 1.6rem; }
+#atoms-box.full .atom-tabs { margin-right: 6.6rem; }
+.atom-tabs { margin-right: 6.4rem !important; }
+#atoms-box.full canvas#pc-canvas, #atoms-box.full canvas#mb-canvas, #atoms-box.full canvas#at-canvas { max-width: 728px; }
+#atoms-box.full .a2-life .life-cv { max-width: 1064px; }
 @media (max-width: 860px) {
   .a2-nn .a2-grid, .a2-cpu .a2-grid { grid-template-columns: 1fr !important; }
 }
@@ -148,12 +156,47 @@ function register(a) {
   for (const f of a.fields) (FIELD_ATOMS[f] = FIELD_ATOMS[f] || []).push(a.id);
 }
 const FIELD_ATOMS = {};
+
+/* ---------- full-screen mode for every atom: bigger box, taller drawings ---------- */
+// window.WOC_ATOM_SCALE is 1.4 in full screen; drawings multiply their height by it
+// (capped at 70% of the screen height so the controls stay reachable).
+window.WOC_ATOM_SCALE = 1;
+const BASE_CANVAS = { "pc-canvas": [420, 320], "mb-canvas": [520, 280], "at-canvas": [320, 260] };
+function sizeBaseCanvases() {
+  for (const id in BASE_CANVAS) {
+    const c = $(id); if (!c) continue;
+    const [w, h] = BASE_CANVAS[id], k = window.WOC_ATOM_SCALE;
+    if (c.width !== Math.round(w * k)) { c.width = Math.round(w * k); c.height = Math.round(h * k); }
+  }
+}
+{
+  const b = document.createElement("button");
+  b.id = "atoms-full"; b.type = "button"; b.title = "Full screen (F)"; b.setAttribute("aria-label", "Toggle full screen");
+  box.insertBefore(b, box.firstChild);
+  let on = false; try { on = localStorage.getItem("woc-atoms-full") === "1"; } catch (e) {}
+  const set = (v, rerun) => {
+    on = v; box.classList.toggle("full", on); b.textContent = on ? "⤡" : "⤢";
+    b.title = on ? "Leave full screen (F)" : "Full screen (F)";
+    window.WOC_ATOM_SCALE = on ? 1.4 : 1;
+    try { localStorage.setItem("woc-atoms-full", on ? "1" : "0"); } catch (e) {}
+    // a resize alone doesn't rebuild canvases, so re-run the current atom at the new size
+    const cur = tabsNav.querySelector(".atom-tab.on");
+    if (rerun && cur && !$("atoms").hidden) showAtom(cur.dataset.atom);
+  };
+  set(on, false);
+  b.addEventListener("click", () => set(!on, true));
+  document.addEventListener("keydown", e => {
+    if ($("atoms").hidden || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (/input|textarea|select/i.test((document.activeElement || {}).tagName || "")) return;
+    if (e.key === "f" || e.key === "F") { e.preventDefault(); set(!on, true); }
+  });
+}
 const WIDE = new Set(["nn", "cpu", "life"]);
 // stopAll/showAtom are global function declarations in atoms.js; wrapping the
 // global binding reaches every caller (tabs, close buttons, field launches).
 const _stopAll = window.stopAll, _showAtom = window.showAtom;
 window.stopAll = function () { _stopAll(); STOPS.forEach(s => { try { s(); } catch (e) {} }); };
-window.showAtom = function (id) { box.classList.toggle("wide", WIDE.has(id)); return _showAtom(id); };
+window.showAtom = function (id) { box.classList.toggle("wide", WIDE.has(id)); sizeBaseCanvases(); return _showAtom(id); };
 if (typeof window.openField === "function") {
   const orig = window.openField;
   window.openField = function (f, d) {
@@ -337,6 +380,7 @@ function nnRun(on) {
 let nnNodes = [];
 function nnLayout() {
   const wrap = $("atom-nn").querySelector(".nn-net"), svg = wrap.querySelector("svg");
+  wrap.style.height = Math.round(Math.min(320 * window.WOC_ATOM_SCALE, innerHeight * .7)) + "px";
   wrap.querySelectorAll(".nn-node,.nn-in-l,.nn-col-l").forEach(n => n.remove());
   const { sizes } = NN.net, Wd = wrap.clientWidth || 360, H = wrap.clientHeight || 320;
   const cols = sizes.length, x0 = 46, x1 = Wd - 34;
@@ -360,7 +404,8 @@ function nnDraw() {
   const root = $("atom-nn"); if (!root || root.hidden || !NN.net) return;
   const { L, W, sizes } = NN.net, act = ACT[NN.act];
   // main canvas: prediction everywhere
-  const main = root.querySelector(".nn-main"), cw = main.clientWidth || 320, ctx = hidpi(main, cw, cw);
+  const main = root.querySelector(".nn-main"); main.style.maxWidth = Math.round(innerHeight * .7) + "px";
+  const cw = main.clientWidth || 320, ctx = hidpi(main, cw, cw);
   const img = nnOffCtx.createImageData(G, G);
   for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { const x = -1 + 2 * (i + .5) / G, y = 1 - 2 * (j + .5) / G; shade(forward(feat(x, y))[L][0], img.data, (j * G + i) * 4, .8); }
   nnOffCtx.putImageData(img, 0, 0); ctx.imageSmoothingEnabled = true; ctx.drawImage(nnOff, 0, 0, cw, cw);
@@ -762,7 +807,8 @@ function lifeDraw() {
   root.querySelectorAll(".life-tabs button").forEach(b => b.classList.toggle("on", b.dataset.t === LIFE.tab));
   root.querySelectorAll(".life-pane").forEach(p => p.hidden = p.dataset.p !== LIFE.tab);
   if (LIFE.tab === "life") {
-    const cv = q(".life-cv"), w = cv.clientWidth || 640, h = Math.round(w * LH / LW), ctx = hidpi(cv, w, h), cs = w / LW;
+    const cv = q(".life-cv"); cv.style.maxWidth = Math.round(Math.min(760 * window.WOC_ATOM_SCALE, innerHeight * .7 * LW / LH)) + "px";
+    const w = cv.clientWidth || 640, h = Math.round(w * LH / LW), ctx = hidpi(cv, w, h), cs = w / LW;
     ctx.fillStyle = "#120b22"; ctx.fillRect(0, 0, w, h);
     if (cs > 5) { ctx.strokeStyle = "rgba(255,255,255,.045)"; ctx.lineWidth = 1; ctx.beginPath();
       for (let x = 1; x < LW; x++) { ctx.moveTo(x * cs, 0); ctx.lineTo(x * cs, h); } for (let y = 1; y < LH; y++) { ctx.moveTo(0, y * cs); ctx.lineTo(w, y * cs); } ctx.stroke(); }
@@ -775,7 +821,7 @@ function lifeDraw() {
     root.querySelectorAll("[data-r]").forEach(b => b.classList.toggle("on", +b.dataset.r === LIFE.rule));
     q(".eca-rule").innerHTML = [7, 6, 5, 4, 3, 2, 1, 0].map(k => `<div class="eca-cell" data-k="${k}" title="neighbourhood ${bits(k, 3)} → ${(LIFE.rule >> k) & 1}">
       <span>${bits(k, 3).split("").map(b => `<i class="${b === "1" ? "on" : ""}"></i>`).join("")}</span><span class="res"><i class="${(LIFE.rule >> k) & 1 ? "on" : ""}"></i></span></div>`).join("");
-    const cv = q(".eca-cv"), w = cv.clientWidth || 640, cs = 2, W = Math.floor(w / cs), rows = 170, ctx = hidpi(cv, w, rows * cs);
+    const cv = q(".eca-cv"), w = cv.clientWidth || 640, cs = window.WOC_ATOM_SCALE > 1 ? 3 : 2, W = Math.floor(w / cs), rows = 170, ctx = hidpi(cv, w, rows * cs);
     ctx.fillStyle = "#120b22"; ctx.fillRect(0, 0, w, rows * cs);
     let row = new Uint8Array(W);
     if (LIFE.start === "random") { const r = mulberry(LIFE.rule * 7919 + 1); for (let i = 0; i < W; i++) row[i] = r() < .5 ? 1 : 0; }

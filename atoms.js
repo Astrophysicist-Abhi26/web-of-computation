@@ -523,7 +523,9 @@ function drawAttention() {
   // heatmap
   const c = document.getElementById("at-canvas"), ctx = c.getContext("2d");
   const cell = 52, ox = 78, oy = 34;
+  ctx.setTransform(1,0,0,1,0,0);
   ctx.clearRect(0,0,c.width,c.height);
+  const k = c.width / 320; ctx.setTransform(k,0,0,k,0,0);   // drawn at 320×260, scaled up in full screen
   ctx.font = "12px 'IBM Plex Mono'"; ctx.fillStyle = "#9a93b8";
   AT.toks.forEach((t,j) => ctx.fillText(t, ox + j*cell + 6, oy - 10));
   AT.toks.forEach((t,i) => {
