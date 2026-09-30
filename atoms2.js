@@ -121,12 +121,20 @@ const CSS = `
 .a2-life .eca-cell i.on { background: #f5c451; border-color: #f5c451; }
 .a2-life .eca-cell .res i { width: 10px; }
 .a2-life input[type=number] { width: 4.2rem; font: .75rem "IBM Plex Mono", monospace; color: var(--ink); background: #140c24; border: 1px solid rgba(255,255,255,.18); border-radius: 7px; padding: .3rem .4rem; }
+.atom-doms { display: flex; flex-wrap: wrap; gap: .35rem; margin: 0 6.4rem .7rem 0; }
+.atom-doms button { font: 500 .66rem "IBM Plex Mono", monospace; color: var(--dim); cursor: pointer; display: inline-flex; gap: .35rem; align-items: center;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: .32rem .7rem; }
+.atom-doms button i { width: 7px; height: 7px; border-radius: 50%; background: hsl(var(--h) 80% 62%); }
+.atom-doms button b { font-weight: 500; color: var(--gold); }
+.atom-doms button.on { color: var(--ink); border-color: var(--gold); background: rgba(245,196,81,.12); }
+.atom-doms button:hover, .atom-doms button:focus-visible { border-color: var(--gold); outline: none; }
+.atom-tab[hidden] { display: none; }
 #atoms-full { position: absolute; top: .6rem; right: 3.9rem; width: 2.75rem; height: 2.75rem; min-width: 44px; min-height: 44px; border-radius: 50%; z-index: 5; cursor: pointer;
   background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.3); color: var(--ink); font-size: 1.05rem; }
 #atoms-full:hover, #atoms-full:focus-visible { border-color: var(--gold); color: var(--gold); background: rgba(245,196,81,.15); }
 #atoms-box.full { width: 100vw !important; max-width: none; max-height: 100vh; height: 100vh; border-radius: 0; padding: 1rem 2.2rem 1.6rem; }
 #atoms-box.full .atom-tabs { margin-right: 6.6rem; }
-.atom-tabs { margin-right: 6.4rem !important; }
+.atom-tabs { margin-right: 0 !important; }
 #atoms-box.full canvas#pc-canvas, #atoms-box.full canvas#mb-canvas, #atoms-box.full canvas#at-canvas { max-width: 728px; }
 #atoms-box.full .a2-life .life-cv { max-width: 1064px; }
 @media (max-width: 860px) {
@@ -140,11 +148,32 @@ const st = document.createElement("style"); st.id = "atoms2-css"; st.textContent
    ============================================================ */
 const box = $("atoms-box"), tabsNav = box.querySelector(".atom-tabs"), footer = $("atoms-box-footer");
 const STOPS = [];
+/* ---------- a domain filter above the tabs, so dozens of atoms stay easy to browse ---------- */
+const ATOM_DOMAIN = { turing:"found", enigma:"info", perceptron:"ml", marble:"ml", attention:"ml" };
+const DOM_SHORT = { found:"Foundations", hard:"Hardware", algo:"Algorithms", lang:"Languages & Systems",
+  info:"Information & Crypto", data:"Data", ai:"Symbolic AI", ml:"Machine Learning" };
+const domNav = document.createElement("nav");
+domNav.className = "atom-doms"; domNav.setAttribute("aria-label", "Atoms by domain");
+box.insertBefore(domNav, tabsNav);
+let domFilter = null;   // null = follow the atom on screen; "all" = show every tab
+function drawDoms() {
+  const count = id => [...tabsNav.children].filter(t => ATOM_DOMAIN[t.dataset.atom] === id).length;
+  domNav.innerHTML = `<button data-dom="all" class="${domFilter === "all" ? "on" : ""}">All <b>${tabsNav.children.length}</b></button>` +
+    DOMAINS.filter(d => count(d.id)).map(d => `<button data-dom="${d.id}" style="--h:${d.hue}" class="${domFilter === d.id ? "on" : ""}"><i></i>${DOM_SHORT[d.id] || d.name} <b>${count(d.id)}</b></button>`).join("");
+  [...tabsNav.children].forEach(t => t.hidden = !(domFilter === "all" || !domFilter || ATOM_DOMAIN[t.dataset.atom] === domFilter));
+}
+domNav.addEventListener("click", e => {
+  const b = e.target.closest("button[data-dom]"); if (!b) return;
+  domFilter = b.dataset.dom;
+  if (domFilter !== "all") { const first = [...tabsNav.children].find(t => ATOM_DOMAIN[t.dataset.atom] === domFilter); if (first) showAtom(first.dataset.atom); }
+  drawDoms();
+});
 function register(a) {
   const tab = document.createElement("button");
   tab.className = "atom-tab"; tab.dataset.atom = a.id; tab.textContent = a.name;
   tab.addEventListener("click", () => showAtom(a.id));
   tabsNav.appendChild(tab);
+  if (a.domain) ATOM_DOMAIN[a.id] = a.domain;
   const pane = document.createElement("section");
   pane.className = "atom-pane a2 " + a.cls; pane.id = "atom-" + a.id; pane.hidden = true;
   pane.innerHTML = a.html;
@@ -152,8 +181,10 @@ function register(a) {
   ATOM_NAMES[a.id] = a.name;
   let built = false;
   INIT[a.id] = () => { if (!built) { built = true; a.build(pane); } a.start(pane); };
-  STOPS.push(a.stop);
-  for (const f of a.fields) (FIELD_ATOMS[f] = FIELD_ATOMS[f] || []).push(a.id);
+  STOPS.push(() => a.stop(pane));
+  for (const f of a.fields || []) (FIELD_ATOMS[f] = FIELD_ATOMS[f] || []).push(a.id);
+  if (a.wide) WIDE.add(a.id);
+  drawDoms();
 }
 const FIELD_ATOMS = {};
 
@@ -196,7 +227,13 @@ const WIDE = new Set(["nn", "cpu", "life"]);
 // global binding reaches every caller (tabs, close buttons, field launches).
 const _stopAll = window.stopAll, _showAtom = window.showAtom;
 window.stopAll = function () { _stopAll(); STOPS.forEach(s => { try { s(); } catch (e) {} }); };
-window.showAtom = function (id) { box.classList.toggle("wide", WIDE.has(id)); sizeBaseCanvases(); return _showAtom(id); };
+window.showAtom = function (id) {
+  box.classList.toggle("wide", WIDE.has(id)); sizeBaseCanvases();
+  if (domFilter !== "all") domFilter = ATOM_DOMAIN[id] || null;
+  drawDoms();
+  return _showAtom(id);
+};
+window.WOC_ATOMS = { register: a => register(a), domains: DOM_SHORT };   // atoms3.js adds more atoms through this
 if (typeof window.openField === "function") {
   const orig = window.openField;
   window.openField = function (f, d) {
@@ -838,8 +875,8 @@ window.WOC_LIFE = { LIFE, lifeStep, lifePlace, rle, eca };
 /* ============================================================
    Register all three
    ============================================================ */
-register({ id:"nn", name:"Neural-net playground", cls:"a2-nn", fields:["prehistory", "deep"], html:NN_HTML, build:nnBuild, start:nnStart, stop:nnStop });
-register({ id:"cpu", name:"NAND → CPU", cls:"a2-cpu", fields:["stored", "wartime"], html:CPU_HTML, build:cpuBuild, start:cpuStart, stop:cpuStop });
-register({ id:"life", name:"Life & Rule 110", cls:"a2-life", fields:["computability", "automata"], html:LIFE_HTML, build:lifeBuild, start:lifeStart, stop:lifeStop });
+register({ id:"nn", name:"Neural-net playground", domain:"ml", cls:"a2-nn", fields:["prehistory", "deep"], html:NN_HTML, build:nnBuild, start:nnStart, stop:nnStop });
+register({ id:"cpu", name:"NAND → CPU", domain:"hard", cls:"a2-cpu", fields:["stored", "wartime"], html:CPU_HTML, build:cpuBuild, start:cpuStart, stop:cpuStop });
+register({ id:"life", name:"Life & Rule 110", domain:"found", cls:"a2-life", fields:["computability", "automata"], html:LIFE_HTML, build:lifeBuild, start:lifeStart, stop:lifeStop });
 window.addEventListener("resize", () => { if (!$("atom-nn").hidden) { nnLayout(); nnDraw(); } if (!$("atom-life").hidden) lifeDraw(); });
 })();

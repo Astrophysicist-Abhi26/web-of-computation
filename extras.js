@@ -77,6 +77,7 @@ const CSS = `
   #panel .hm-bit.flip{background:rgba(255,143,122,.25);border-color:#ff8f7a}
   #panel .hm-bit.fix{outline:2px solid #7fe3d6;outline-offset:1px}
   #panel .hm-lbl{font:500 .6rem "IBM Plex Mono",monospace;color:#9d96b8;letter-spacing:.08em;margin-top:.5rem}
+  #panel canvas[hidden]{display:none}
   #panel .av-grid{display:grid;grid-template-columns:repeat(32,1fr);gap:1px;margin:.5rem 0}
   #panel .av-grid i{aspect-ratio:1;background:rgba(255,255,255,.07);border-radius:1px}
   #panel .av-grid i.x{background:#ff8f7a}
@@ -217,6 +218,8 @@ function insertExtraLabs(f) {
     try { l.init(sec); } catch (e) { console.error("extra lab", l.title, e); }
   });
 }
+
+window.WOC_EXTRAS = { EXTRA_LABS, ensureCSS };   // atoms3.js reuses these labs as atoms
 
 /* ------------------------------------------------------------
    Hook into app.js: openField is a global function declaration,
@@ -644,7 +647,7 @@ EXTRA_LABS["modern-crypto"] = [{
     <div class="gk-out av-msgs"></div>
     <div class="av-grid"></div>
     <div class="gk-out av-hex"></div>
-    <canvas class="gk-canvas av-hist" aria-label="distribution of flipped bits"></canvas>
+    <canvas class="gk-canvas av-hist" aria-label="distribution of flipped bits" hidden></canvas>
     <div class="gk-out av-stat">Run 500 flips to see the distribution.</div>`,
   caveat: "The avalanche is necessary, not sufficient: many broken hashes (MD5, SHA-1) avalanche beautifully. Their failures were found by cryptanalysis: practical MD5 collisions in 2004 and the SHAttered SHA-1 collision in 2017. SHA-256 has no known practical attack.",
   init(root) {
@@ -673,6 +676,7 @@ EXTRA_LABS["modern-crypto"] = [{
       const ha = sha256(a), hist = new Array(257).fill(0); let sum = 0, sq = 0, lo = 256, hi = 0; const T = 500;
       for (let t = 0; t < T; t++) { const n = bitDiff(ha, sha256(flipOne(a).bytes)); hist[n]++; sum += n; sq += n * n; lo = Math.min(lo, n); hi = Math.max(hi, n); }
       const mean = sum / T, sd = Math.sqrt(sq / T - mean * mean);
+      root.querySelector(".av-hist").hidden = false;   // shown once there is a distribution to draw
       const { ctx, w, h } = GuideKit.canvas(root.querySelector(".av-hist"), 150);
       const x0 = 88, x1 = 168, mx = Math.max(...hist);
       ctx.strokeStyle = "rgba(255,255,255,.15)"; ctx.beginPath(); ctx.moveTo(10, h - 20); ctx.lineTo(w - 10, h - 20); ctx.stroke();

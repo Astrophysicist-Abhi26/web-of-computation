@@ -126,7 +126,9 @@ function topicsMarkup(f) {
       <h3>${MARK[t.s] || ""} ${t.n}</h3><div class="tmeta">${t.who} · ${t.y}</div><p>${t.d}</p></div>`).join("")}</div>`;
 }
 
+window.GUIDE_SPECS = window.GUIDE_SPECS || {};
 function register(fieldId, spec) {
+  window.GUIDE_SPECS[fieldId] = spec;   // atoms3.js reuses the labs as full-size atoms
   window.GUIDES[fieldId] = function open() {
     ensureStyles(spec.css, "gk-css-" + fieldId);
     const body = document.getElementById("panel-body");
@@ -167,7 +169,10 @@ function register(fieldId, spec) {
 /* ---------- small helpers shared by the labs ---------- */
 function canvas(el, height) {
   const dpr = Math.min(2, window.devicePixelRatio || 1);
-  const w = el.clientWidth || 360, h = height || 200;
+  let h = height || 200;
+  // labs promoted to atoms (atoms3.js) get room to breathe: taller in the atoms window, taller still full screen
+  if (el.closest && el.closest("#atoms")) h = Math.round(Math.min(h * 1.35 * (window.WOC_ATOM_SCALE || 1), innerHeight * .7));
+  const w = el.clientWidth || 360;
   el.width = Math.round(w * dpr); el.height = Math.round(h * dpr); el.style.height = h + "px";
   const ctx = el.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   return { ctx, w, h };
