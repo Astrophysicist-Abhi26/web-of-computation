@@ -145,9 +145,9 @@ const LAYOUTS = {
   off:    { name:"Gallery only",         home:"0 -90 1600 1090",  people:[],      hint:"No one on the map; open ▦ pioneer gallery to see everyone." },
 };
 LAYOUTS.home.people = Object.values(HOMES).flatMap(h => h.ids);
-let LAYOUT = "row";
-try { LAYOUT = localStorage.getItem("woc-pioneer-layout") || "row"; } catch (e) {}
-if (!LAYOUTS[LAYOUT]) LAYOUT = "row";
+let LAYOUT = "sky";   // the constellation is the one fixed layout
+try { localStorage.removeItem("woc-pioneer-layout"); } catch (e) {}   // the old picker's choice
+const SKY_TOP = -190;  // the constellation's band: y from about -150 to -40, labels end above y = 10
 let FEATURED = [];
 
 const htmlLayer = document.createElement("div");
@@ -191,16 +191,18 @@ const BUILD = {
     list.forEach((p, i) => svgPerson(p, X0 + i * (X1 - X0) / (list.length - 1), -20, 40));
   },
   sky() {
-    const list = peopleOf(SIXTEEN), pos = {};
+    // spread across the whole visible width (homeBox), in a band above every domain
+    const narrow = innerWidth < 760, list = peopleOf(narrow ? TWELVE : SIXTEEN), pos = {};
+    const [bx, , bw] = window.homeBox ? homeBox() : [0, 0, 1600], X0 = bx + 80, X1 = bx + bw - 80;
     list.forEach((p, i) => {
-      const x = 80 + i * (1300 / (list.length - 1));
-      const y = -28 + 50 * Math.sin(i * 1.9 + .6) + 12 * Math.cos(i * 3.3);   // stays below the title band
+      const x = X0 + i * ((X1 - X0) / (list.length - 1));
+      const y = -95 + 45 * Math.sin(i * 1.9 + .6) + 10 * Math.cos(i * 3.3);
       pos[p.id] = [x, y];
     });
     const lines = svgEl("g", { class:"pio-links" }, Lpeople);
     for (const [a, b, why, kind] of LINKS) {
       if (!pos[a] || !pos[b]) continue;
-      const [x1, y1] = pos[a], [x2, y2] = pos[b], mx = (x1 + x2) / 2, my = Math.min(y1, y2) - 26 - Math.abs(x2 - x1) * .06;
+      const [x1, y1] = pos[a], [x2, y2] = pos[b], mx = (x1 + x2) / 2, my = Math.max(SKY_TOP + 8, Math.min(y1, y2) - 26 - Math.abs(x2 - x1) * .06);
       const path = svgEl("path", { d:`M${x1} ${y1} Q${mx} ${my} ${x2} ${y2}`, class:"pio-link" + (kind ? " " + kind : "") }, lines);
       svgEl("title", {}, path).textContent = why;
       const hit = svgEl("path", { d:path.getAttribute("d"), class:"pio-link-hit" }, lines);
@@ -248,19 +250,21 @@ const BUILD = {
 function applyLayout(name, animate) {
   LAYOUT = name; clearLayout();
   const L = LAYOUTS[name];
-  FEATURED = L.people.slice();
+  // fit the view first (with the constellation's band on top), so the layout can use the whole width
+  if (window.setHome) setHome(name === "sky" ? SKY_TOP : L.home);
   BUILD[name]();
+  FEATURED = PEOPLE.filter(p => p._el).map(p => p.id);
   document.body.dataset.pioLayout = name;
-  if (window.setHome) setHome(L.home); 
   setYear(S.year);   // dim anyone not born yet on the scrubber
-  const hint = document.getElementById("pio-pick-hint"); if (hint) hint.textContent = L.hint;
 }
 applyLayout(LAYOUT);
 probePhotos();
-addEventListener("resize", () => { if (LAYOUT === "ribbon") applyLayout("ribbon"); });
+// re-spread the constellation when the window changes size (debounced)
+let pioResize = null;
+addEventListener("resize", () => { clearTimeout(pioResize); pioResize = setTimeout(() => applyLayout(LAYOUT), 180); });
 
-// the picker, next to the crack-style picker
-{
+// (the layout picker was retired: the constellation is fixed)
+if (false) {
   const toggles = document.getElementById("toggles");
   if (toggles) {
     const lab = document.createElement("label");

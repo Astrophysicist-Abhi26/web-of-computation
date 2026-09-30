@@ -21,11 +21,29 @@
 </header>
 
 <div id="legend">
-  <b>status weather</b><br>
-  🏛 foundational &nbsp; 🔥 frontier<br>
-  ⚙️ workhorse &nbsp;&nbsp; 🪦 obsolete<br>
-  🧟 revived<br>
-  <b>— gold</b> bridges · <b style="color:#ff5d6c">— red</b> disputes
+  <b class="lg-h">How to read the sky</b>
+  <div class="lg-row"><span>🏛 foundational</span><span>🔥 frontier</span></div>
+  <div class="lg-row"><span>⚙️ workhorse</span><span>🪦 obsolete</span></div>
+  <div class="lg-row"><span>🧟 revived</span><span></span></div>
+  <div class="lg-row"><span><b style="color:#f5c451">—</b> bridges</span><span><b style="color:#ff5d6c">—</b> disputes</span></div>
+  <div class="lg-sep"></div>
+  <div class="lg-stats"><b data-count="domains">8</b> domains · <b data-count="fields">31</b> fields<br><b data-count="topics">119</b> topics · <b data-count="pioneers">65</b> pioneers<br><b data-count="atoms">8</b> playable atoms</div>
+  <div class="lg-sep"></div>
+  <div class="lg-tips">◉ click a glowing domain to open it<br>⟷ drag the year to travel in time<br>✦ click a portrait for a life story<br>⚛ play with an idea<br>▦ the gallery has every pioneer</div>
+</div>
+
+<div id="welcome" hidden>
+  <div class="wc-card" role="dialog" aria-modal="true" aria-labelledby="wc-t">
+    <p class="wc-k">An interactive map</p>
+    <h2 id="wc-t">The Web of <em>Computation</em></h2>
+    <p>Eight glowing continents, from logic and hardware to machine learning, joined by golden bridges between ideas and red lines of live disputes. Two centuries of computing, from Babbage's engines to the models of today, the <span data-count="pioneers">65</span> people who built it, and <span data-count="atoms">8</span> ideas you can play with.</p>
+    <ul>
+      <li><b>Click a domain</b> to break it open into fields, and a field into its topics.</li>
+      <li><b>Drag the timeline</b> to watch computing being born, era by era.</li>
+      <li><b>⚛ Playable atoms</b>: a Turing machine, Enigma, a computer built from NAND gates, a neural network you can train.</li>
+    </ul>
+    <button id="wc-go">Start exploring →</button>
+  </div>
 </div>
 
 <div id="sky">
@@ -40,7 +58,6 @@
 
 <div id="toggles">
   <button id="toggle-people">✦ pioneers</button>
-  <button id="toggle-shells" class="on">◎ containment shells</button>
   <button id="toggle-atoms">⚛ playable atoms</button>
 </div>
 

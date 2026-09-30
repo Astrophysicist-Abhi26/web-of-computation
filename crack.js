@@ -570,6 +570,7 @@ body.cracking .field { transition: none !important; }
 body.topic-focus .crack-root:not(.topic-crack) .crack-spoke { opacity: .12 !important; }
 body.topic-focus .field.active:not(.focus) { opacity: .1 !important; }
 body.topic-focus .domain { opacity: .18; transition: opacity .4s ease; }
+body.topic-focus .domain text { opacity: 0; transition: opacity .3s ease; }   /* no domain name behind the topics */
 .topic-node { cursor: pointer; outline: none; }
 .topic-node .hit { fill: transparent; }
 .topic-node:hover .hit, .topic-node:focus-visible .hit { fill: rgba(245,196,81,.16); }
