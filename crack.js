@@ -598,8 +598,10 @@ function crackField(f, d) {
   });
   document.body.classList.add("topic-focus");
   f._el.classList.add("focus");
-  const w = 600, h = 400;
-  if (window.animateViewBox) animateViewBox(`${f1(f._x - w / 2 + w * .13)} ${f1(f._y - h / 2 + 8)} ${w} ${h}`);
+  // frame the ring of topics (with their two-line labels) in the space left of the side panel
+  const box = window.fitFree ? fitFree({ x0: f._x - RXt - 72, x1: f._x + RXt + 72, y0: f._y - RYt - 24, y1: f._y + RYt + 58 })
+    : `${f1(f._x - 261)} ${f1(f._y - 192)} 600 400`;
+  if (window.animateViewBox) animateViewBox(box);
 
   const place = (i, x, y, op, s) => {
     const q = nodes[i];

@@ -193,7 +193,15 @@ const BUILD = {
   sky() {
     // spread across the whole visible width (homeBox), in a band above every domain
     const narrow = innerWidth < 760, list = peopleOf(narrow ? TWELVE : SIXTEEN), pos = {};
-    const [bx, , bw] = window.homeBox ? homeBox() : [0, 0, 1600], X0 = bx + 80, X1 = bx + bw - 80;
+    const [bx, by, bw] = window.homeBox ? homeBox() : [0, -190, 1600], X0 = bx + 80;
+    let X1 = bx + bw - 80;
+    // on short windows the guide card (middle of the right edge) can reach up into the band: stop short of it
+    const leg = document.getElementById("legend");
+    if (leg && getComputedStyle(leg).display !== "none") {
+      const r = leg.getBoundingClientRect(), k = bw / innerWidth;          // map units per screen pixel
+      const bandBottom = (14 - by) / k;                                     // lowest label, in screen pixels
+      if (r.top < bandBottom + 8) X1 = Math.min(X1, bx + (r.left - 16) * k - 60);
+    }
     list.forEach((p, i) => {
       const x = X0 + i * ((X1 - X0) / (list.length - 1));
       const y = -95 + 45 * Math.sin(i * 1.9 + .6) + 10 * Math.cos(i * 3.3);

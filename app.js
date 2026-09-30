@@ -248,15 +248,28 @@ function contentBox() {
   return { x0: Math.min(...DOMAINS.map(d => d.x - m(d))), x1: Math.max(...DOMAINS.map(d => d.x + m(d))),
            y0: HOME_TOP, y1: Math.max(...DOMAINS.map(d => d.y + m(d))) };
 }
+// the button column and the centred time bar share the bottom edge; when they would meet
+// (narrower windows), lift the buttons to sit just above the bar
+function placeToggles() {
+  const tg = document.getElementById("toggles"), tb = document.getElementById("timebar"); if (!tg || !tb) return;
+  tg.style.bottom = "";
+  const a = tg.getBoundingClientRect(), b = tb.getBoundingClientRect();
+  const barTop = innerHeight - parseFloat(getComputedStyle(tb).bottom) - tb.offsetHeight;   // ignores the slide-away transform
+  if (a.right + 12 > b.left && a.left < b.right + 12) tg.style.bottom = Math.round(innerHeight - barTop + 12) + "px";
+}
 function fitHome() {
-  const W = innerWidth, H = innerHeight, narrow = W < 760;
+  placeToggles();
+  const W = innerWidth, H = innerHeight;
   const leg = document.getElementById("legend"), tb = document.getElementById("timebar"), tg = document.getElementById("toggles");
-  const L = narrow ? 8 : (tg ? tg.getBoundingClientRect().width + 36 : 250);
-  const R = W - (narrow || !leg ? 8 : leg.offsetWidth + 34);
-  const T = narrow ? 64 : 92;
-  let B = H - (tb ? tb.offsetHeight + 30 : 20);
-  if (narrow && tg) B = Math.min(B, tg.getBoundingClientRect().top - 12);   // phones: controls sit above the scrubber
+  const legOn = leg && getComputedStyle(leg).display !== "none";
+  const T = document.querySelector("header").getBoundingClientRect().bottom + 24;   // below the title's dark band
+  const R = W - (legOn ? leg.offsetWidth + 34 : 8);
+  const barTop = H - (tb ? tb.offsetHeight + 30 : 20);
+  const g = tg ? tg.getBoundingClientRect() : { right: 0, top: H };
   const C = contentBox(), cw = C.x1 - C.x0, ch = C.y1 - C.y0;
+  // two ways to keep clear of the button column: sit beside it, or sit above it; keep the roomier one
+  const fits = [[g.right + 24, barTop], [8, Math.min(barTop, g.top - 12)]].map(([L, B]) => ({ L, B, s: Math.min((R - L) / cw, (B - T) / ch) }));
+  const { L, B } = fits[0].s >= fits[1].s ? fits[0] : fits[1];
   const s = Math.max(.05, Math.min((R - L) / cw, (B - T) / ch));
   const ox = L + ((R - L) - cw * s) / 2, oy = T + ((B - T) - ch * s) / 2;
   HOME = `${C.x0 - ox / s} ${C.y0 - oy / s} ${W / s} ${H / s}`;
@@ -266,13 +279,26 @@ function fitHome() {
 function setHome(top) { HOME_TOP = typeof top === "number" ? top : +String(top).split(" ")[1]; fitHome(); if (!S.zoomed) animateViewBox(HOME); }
 // the whole visible area in map units, so the pioneers can spread across the full width
 window.homeBox = () => { fitHome(); return HOME.split(" ").map(Number); };
-addEventListener("resize", () => { fitHome(); if (!S.zoomed) svg.setAttribute("viewBox", HOME); });
+addEventListener("resize", () => {
+  fitHome();
+  if (!S.zoomed) svg.setAttribute("viewBox", HOME);
+  else if (!document.body.classList.contains("topic-focus")) svg.setAttribute("viewBox", domainBox(S.zoomed));
+});
+// Fit a box of map content (C = {x0, y0, x1, y1}) into the part of the screen a zoomed view can use:
+// left of the side panel and below the title band. Used for domains here and for topics in crack.js.
+function fitFree(C) {
+  const W = innerWidth, H = innerHeight, pw = $("panel").offsetWidth || 0;
+  const head = document.querySelector("header").getBoundingClientRect().bottom;
+  const L = 16, T = head + 10, R = (W > 700 ? W - pw : W) - 16, B = H - 16;
+  const cw = C.x1 - C.x0, ch = C.y1 - C.y0, s = Math.max(.05, Math.min((R - L) / cw, (B - T) / ch));
+  const ox = L + ((R - L) - cw * s) / 2, oy = T + ((B - T) - ch * s) / 2;
+  return `${C.x0 - ox / s} ${C.y0 - oy / s} ${W / s} ${H / s}`;
+}
+window.fitFree = fitFree;
 function domainBox(d) {
-  // shift the domain left of centre so the side panel doesn't cover its fields;
-  // the box grows with the ring of fields around the domain
+  // the domain's ring of fields, with room for the field names beside and below each node
   const R = d.r * 1.05 + 55;
-  const h = Math.max(420, (2 * R + 110) * 1.22), w = h * 620 / 420, shift = innerWidth > 700 ? w * 0.12 : 0;
-  return `${d.x - w / 2 + shift} ${d.y - h * 0.48} ${w} ${h}`;
+  return fitFree({ x0: d.x - R - 82, x1: d.x + R + 82, y0: d.y - R - 24, y1: d.y + R + 52 });
 }
 function zoomTo(d) {
   S.zoomed = d;
