@@ -3,25 +3,37 @@
 An interactive deep-space map of computing history — Babbage (1822) to the LLM era (2026).
 Companion to the Web of Mathematics. Pure HTML/CSS/JS, no build step, GitHub-Pages ready.
 
-## Deploy (same as differential-geometry-lab / web-of-mathematics)
+## Publishing
 
-```bash
-git init && git add . && git commit -m "Web of Computation v1"
-git branch -M main
-git remote add origin https://github.com/<you>/web-of-computation.git
-git push -u origin main
-# GitHub → Settings → Pages → Source: main / root
-```
+The site publishes itself through `.github/workflows/pages.yml` on every
+push to `main` (Node 24 actions, pinned `ubuntu-24.04` runner, so no
+deprecation warnings). One-time setup: **Settings → Pages → Build and
+deployment → Source → GitHub Actions**. Work happens on a feature branch
+and goes live when its pull request is merged into `main`.
 
-Or preview locally: `python3 -m http.server` then open http://localhost:8000
+After changing a script or the stylesheet, bump its `?v=` version in
+`index.html` so returning browsers fetch the new file instead of a cached
+copy.
 
-For an existing clone of this repository, deploy an update with:
+Preview locally: `python3 -m http.server` then open http://localhost:8000
 
-```bash
-git add app.js index.html information-theory.js classical-cryptography.js modern-cryptography.js README.md
-git commit -m "Add interactive cryptography field guides"
-git push origin main
-```
+## Screen layout
+
+- **The map fits the free screen.** `fitHome()` in `app.js` measures the
+  space left by the header, the button column, the guide card and the time
+  bar, and fits the map into it by changing only the SVG `viewBox`, so
+  nothing overlaps at any window size. The pioneer constellation gets its
+  own band above the domains and spreads across the full width.
+- **Controls get out of the way.** When you open a domain or a field, the
+  time bar, buttons and guide card slide away; move the mouse to the bottom
+  edge to bring the time bar back.
+- **Welcome card** on every visit (close with the button, Esc, Enter or a
+  click outside). The counts in it and in the guide card are computed from
+  the data.
+- **Opening animations:** eight styles, one per domain, and the 31 fields
+  take them in turn so each style is used evenly (`crack.js`).
+- **Playable atoms** open in a wider window; ⤢ or **F** switches to full
+  screen with larger drawings, and the choice is remembered.
 
 ## What's on the map
 

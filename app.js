@@ -237,13 +237,68 @@ $("panel-close").addEventListener("click", () => {
 });
 
 // ---------- semantic zoom ----------
-let HOME = "0 -190 1600 1190";   // room at the top for the pioneer portraits
-// pioneers.js changes the home view to suit the chosen pioneer layout
-function setHome(v) { HOME = v; if (!S.zoomed) animateViewBox(HOME); }
+// The home view is fitted to the free part of the screen, so the map never slides under the
+// title band, the controls column, the guide card or the time scrubber. Nothing is redrawn:
+// only the SVG viewBox changes, and the map shrinks only when the window really is small.
+let HOME_TOP = -190;                  // top of the content (pioneer constellation) in map units
+let HOME = "0 -190 1600 1190";
+function contentBox() {
+  // the domains with a margin for their rings and labels, from the pioneer band down
+  const m = d => d.r * 1.3;
+  return { x0: Math.min(...DOMAINS.map(d => d.x - m(d))), x1: Math.max(...DOMAINS.map(d => d.x + m(d))),
+           y0: HOME_TOP, y1: Math.max(...DOMAINS.map(d => d.y + m(d))) };
+}
+// the button column and the centred time bar share the bottom edge; when they would meet
+// (narrower windows), lift the buttons to sit just above the bar
+function placeToggles() {
+  const tg = document.getElementById("toggles"), tb = document.getElementById("timebar"); if (!tg || !tb) return;
+  tg.style.bottom = "";
+  const a = tg.getBoundingClientRect(), b = tb.getBoundingClientRect();
+  const barTop = innerHeight - parseFloat(getComputedStyle(tb).bottom) - tb.offsetHeight;   // ignores the slide-away transform
+  if (a.right + 12 > b.left && a.left < b.right + 12) tg.style.bottom = Math.round(innerHeight - barTop + 12) + "px";
+}
+function fitHome() {
+  placeToggles();
+  const W = innerWidth, H = innerHeight;
+  const leg = document.getElementById("legend"), tb = document.getElementById("timebar"), tg = document.getElementById("toggles");
+  const legOn = leg && getComputedStyle(leg).display !== "none";
+  const T = document.querySelector("header").getBoundingClientRect().bottom + 24;   // below the title's dark band
+  const R = W - (legOn ? leg.offsetWidth + 34 : 8);
+  const barTop = H - (tb ? tb.offsetHeight + 30 : 20);
+  const g = tg ? tg.getBoundingClientRect() : { right: 0, top: H };
+  const C = contentBox(), cw = C.x1 - C.x0, ch = C.y1 - C.y0;
+  // two ways to keep clear of the button column: sit beside it, or sit above it; keep the roomier one
+  const fits = [[g.right + 24, barTop], [8, Math.min(barTop, g.top - 12)]].map(([L, B]) => ({ L, B, s: Math.min((R - L) / cw, (B - T) / ch) }));
+  const { L, B } = fits[0].s >= fits[1].s ? fits[0] : fits[1];
+  const s = Math.max(.05, Math.min((R - L) / cw, (B - T) / ch));
+  const ox = L + ((R - L) - cw * s) / 2, oy = T + ((B - T) - ch * s) / 2;
+  HOME = `${C.x0 - ox / s} ${C.y0 - oy / s} ${W / s} ${H / s}`;
+  return HOME;
+}
+// pioneers.js sets the top of the content so the constellation gets its own band
+function setHome(top) { HOME_TOP = typeof top === "number" ? top : +String(top).split(" ")[1]; fitHome(); if (!S.zoomed) animateViewBox(HOME); }
+// the whole visible area in map units, so the pioneers can spread across the full width
+window.homeBox = () => { fitHome(); return HOME.split(" ").map(Number); };
+addEventListener("resize", () => {
+  fitHome();
+  if (!S.zoomed) svg.setAttribute("viewBox", HOME);
+  else if (!document.body.classList.contains("topic-focus")) svg.setAttribute("viewBox", domainBox(S.zoomed));
+});
+// Fit a box of map content (C = {x0, y0, x1, y1}) into the part of the screen a zoomed view can use:
+// left of the side panel and below the title band. Used for domains here and for topics in crack.js.
+function fitFree(C) {
+  const W = innerWidth, H = innerHeight, pw = $("panel").offsetWidth || 0;
+  const head = document.querySelector("header").getBoundingClientRect().bottom;
+  const L = 16, T = head + 10, R = (W > 700 ? W - pw : W) - 16, B = H - 16;
+  const cw = C.x1 - C.x0, ch = C.y1 - C.y0, s = Math.max(.05, Math.min((R - L) / cw, (B - T) / ch));
+  const ox = L + ((R - L) - cw * s) / 2, oy = T + ((B - T) - ch * s) / 2;
+  return `${C.x0 - ox / s} ${C.y0 - oy / s} ${W / s} ${H / s}`;
+}
+window.fitFree = fitFree;
 function domainBox(d) {
-  // shift the domain left of centre so the side panel doesn't cover its fields
-  const w = 620, h = 420, shift = innerWidth > 700 ? w * 0.14 : 0;
-  return `${d.x - w / 2 + shift} ${d.y - h / 2} ${w} ${h}`;
+  // the domain's ring of fields, with room for the field names beside and below each node
+  const R = d.r * 1.05 + 55;
+  return fitFree({ x0: d.x - R - 82, x1: d.x + R + 82, y0: d.y - R - 24, y1: d.y + R + 52 });
 }
 function zoomTo(d) {
   S.zoomed = d;
@@ -274,7 +329,7 @@ function animateViewBox(target) {
     if (k < 1) vbAnim = requestAnimationFrame(step);
   })(t0);
 }
-svg.setAttribute("viewBox", HOME);
+fitHome(); svg.setAttribute("viewBox", HOME);
 
 // ---------- the era engine (signature) ----------
 function eraFor(y) { return ERAS.find(e => y >= e.from && y <= e.to) || ERAS[ERAS.length - 1]; }
@@ -331,14 +386,49 @@ $("toggle-people").addEventListener("click", e => {
   document.body.classList.toggle("people", S.people);
   e.currentTarget.classList.toggle("on", S.people);
 });
-$("toggle-shells").addEventListener("click", e => {
-  const on = Lshell.style.display !== "none";
-  Lshell.style.display = on ? "none" : "";
-  e.currentTarget.classList.toggle("on", !on);
-});
+// the containment shells cut across the domains, so they stay off the overview map
+Lshell.style.display = "none";
 
 // ---------- boot ----------
 document.body.classList.add("people"); // pioneers visible by default
 $("toggle-people").classList.add("on");
 S.people = true;
 setYear(2026);
+
+// ---------- dock-style scrubber: hidden while zoomed, revealed from the bottom edge ----------
+(function () {
+  const hot = document.createElement("div"); hot.id = "tb-hot"; document.body.appendChild(hot);
+  const tb = $("timebar"); let t = null;
+  const peek = on => { clearTimeout(t); if (on) document.body.classList.add("tb-peek"); else t = setTimeout(() => document.body.classList.remove("tb-peek"), 700); };
+  hot.addEventListener("mouseenter", () => peek(true));
+  hot.addEventListener("mouseleave", () => peek(false));
+  if (tb) { tb.addEventListener("mouseenter", () => peek(true)); tb.addEventListener("mouseleave", () => peek(false)); }
+  // a click on the map drops the keyboard focus, so no focus box lingers
+  svg.addEventListener("mouseup", () => { const a = document.activeElement; if (a && a !== document.body && svg.contains(a)) a.blur(); });
+})();
+
+// ---------- live counts in the guide card and welcome card ----------
+// filled once every script has loaded, so they always match the data
+document.addEventListener("DOMContentLoaded", () => {
+  const fields = Object.values(FIELDS).flat();
+  const n = {
+    domains: DOMAINS.length, fields: fields.length,
+    topics: fields.reduce((k, f) => k + (f.topics || []).length, 0),
+    pioneers: typeof PEOPLE !== "undefined" ? PEOPLE.length : 0,
+    atoms: document.querySelectorAll("#atoms .atom-tab").length,
+  };
+  document.querySelectorAll("[data-count]").forEach(e => { if (n[e.dataset.count] != null) e.textContent = n[e.dataset.count]; });
+  fitHome(); if (!S.zoomed) svg.setAttribute("viewBox", HOME);   // the guide card may have changed size
+});
+
+// ---------- the welcome card: shown on every visit and every reload ----------
+(function () {
+  const w = $("welcome"); if (!w) return;
+  try { localStorage.removeItem("woc-welcomed"); } catch (e) {}   // never remembered
+  w.hidden = false;
+  const close = () => { if (w.hidden || w.classList.contains("out")) return; w.classList.add("out"); setTimeout(() => { w.hidden = true; w.classList.remove("out"); }, 450); };
+  $("wc-go").addEventListener("click", close);
+  w.addEventListener("click", e => { if (e.target === w) close(); });
+  addEventListener("keydown", e => { if (!w.hidden && (e.key === "Escape" || e.key === "Enter")) { e.preventDefault(); close(); } });
+  requestAnimationFrame(() => $("wc-go").focus({ preventScroll: true }));
+})();
