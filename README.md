@@ -208,5 +208,29 @@ inside the matching fields' panels:
    text, RLHF, Q-learning, bandits and tic-tac-toe against MCTS. Each such
    lab inside a guide has a "⤢ play full size" button. To promote another
    lab, add a line to `PROMOTE` in `atoms3.js`.
+10. **Wave 2: 11 new atoms** (`atoms4.js`) and 11 more promoted labs
+    (69 atoms in all).
+    - *Foundations:* a λ-calculus reducer (Church numerals, booleans,
+      S K K, Ω; step by step in normal order) and a busy beaver runner
+      (BB(2)–BB(5) champions; BB(5) runs its 47,176,870 steps in about
+      a second).
+    - *Hardware:* Babbage's difference engine (crank the method of
+      differences) and a cache simulator (lines, associativity, LRU; row-
+      versus column-order loops).
+    - *Information & crypto:* BB84 quantum key exchange with an optional
+      eavesdropper, RSA from scratch (keys, encryption and factoring
+      attack), Diffie–Hellman as paint mixing plus the real modular
+      arithmetic, a birthday attack on truncated SHA-256, and a compression
+      shoot-out (RLE, Huffman, LZW versus the entropy bound).
+    - *Machine learning:* a tiny character n-gram language model
+      (context, temperature, top-k) and a 1-D GAN tug-of-war that reaches
+      the data distribution and can be pushed into mode collapse.
+    - *Newly promoted:* Anscombe's quartet, vector search (IVF), conformal
+      prediction, value iteration, game-tree search depth, the threshold
+      neuron, backprop by hand, loss = likelihood, double descent,
+      vanishing gradients and scaling laws.
+
+    The pure logic is exposed as `window.WOC_W2`, so it can be tested
+    without the page.
 
 The atoms window has a domain filter row (with counts) above the tabs.

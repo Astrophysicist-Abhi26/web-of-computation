@@ -1,5 +1,5 @@
 /* ============================================================
-   THE WEB OF COMPUTATION — atoms3.js  (Wave 1)
+   THE WEB OF COMPUTATION — atoms3.js  (Waves 1–2)
    Promotes the most hands-on labs from the field guides into
    full playable atoms: listed in the ⚛ atoms window, filterable
    by domain, and playable full screen.
@@ -40,6 +40,9 @@ const PROMOTE = [
   ["data", "lab-lsq",         "stats",           1, "Least squares"],
   ["data", "lab-mcmc",        "stats",           2, "MCMC random walk"],
   ["data", "lab-simpson",     "practice",        2, "Simpson's paradox"],
+  ["data", "lab-anscombe",    "practice",        0, "Anscombe's quartet"],
+  ["data", "lab-vectordb",    "databases",       2, "Vector search (IVF)"],
+  ["data", "lab-conformal",   "stats",           3, "Conformal prediction"],
   ["ai",   "lab-eliza",       "symbolic",        0, "ELIZA"],
   ["ai",   "lab-minimax",     "symbolic",        1, "Minimax & alpha–beta"],
   ["ai",   "lab-expert",      "symbolic",        2, "Expert system"],
@@ -47,19 +50,30 @@ const PROMOTE = [
   ["ai",   "lab-turingtest",  "founding",        0, "The imitation game"],
   ["ai",   "lab-nash",        "decision",        0, "Nash equilibria"],
   ["ai",   "lab-axelrod",     "decision",        1, "Axelrod's tournament"],
+  ["ai",   "lab-valueiter",   "decision",        2, "Value iteration"],
+  ["ai",   "lab-chessdepth",  "milestones",      0, "Game-tree search depth"],
+  ["ml",   "lab-mcculloch",   "prehistory",      0, "Threshold neuron"],
   ["ml",   "lab-hebb",        "prehistory",      1, "Hebbian memory"],
+  ["ml",   "lab-backprop1",   "prehistory",      3, "Backprop by hand"],
+  ["ml",   "lab-mle",         "paradigms-ml",    2, "Loss = likelihood"],
   ["ml",   "lab-knn",         "classical",       0, "k-NN vs k-means"],
   ["ml",   "lab-forest",      "classical",       1, "Trees & forests"],
+  ["ml",   "lab-ddescent",    "classical",       2, "Double descent"],
   ["ml",   "lab-conv",        "deep",            0, "Convolution"],
+  ["ml",   "lab-vanishing",   "deep",            1, "Vanishing gradients"],
   ["ml",   "lab-embed",       "deep",            2, "Word embeddings"],
   ["ml",   "lab-diffusion",   "deep",            3, "Diffusion"],
   ["ml",   "lab-bpe",         "llm",             0, "BPE tokenizer"],
   ["ml",   "lab-nexttoken",   "llm",             1, "Next-token text"],
+  ["ml",   "lab-scaling",     "llm",             2, "Scaling laws"],
   ["ml",   "lab-rlhf",        "llm",             3, "RLHF rater"],
   ["ml",   "lab-qlearn",      "deeprl",          0, "Q-learning"],
   ["ml",   "lab-bandit",      "deeprl",          1, "Multi-armed bandits"],
   ["ml",   "lab-mcts",        "deeprl",          2, "Tic-tac-toe vs MCTS"],
 ];
+
+// labs whose canvas stays empty until a button is pressed: press it once when the atom opens
+const AUTORUN = { "lab-ddescent": '[data-a="go"]' };
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const fieldOf = src => { const fid = src.replace(/^x:/, ""); for (const d of DOMAINS) for (const f of FIELDS[d.id] || []) if (f.id === fid) return { f, d }; return null; };
@@ -125,6 +139,7 @@ for (const [domain, id, src, i, name] of PROMOTE) {
         <div class="it-kicker">${kicker}</div><h3>${lab.title}</h3>
         <p class="it-lab-intro">${lab.intro}</p>${lab.html}${lab.caveat ? `<p class="it-caveat">${lab.caveat}</p>` : ""}</section>`;
       try { lab.init(host.querySelector(".it-lab")); } catch (e) { console.error("atom " + id, e); }
+      const auto = AUTORUN[id] && host.querySelector(AUTORUN[id]); if (auto) auto.click();
     },
     stop(pane) { const host = pane.querySelector(".lab-host"); if (host) host.innerHTML = ""; },
   });
